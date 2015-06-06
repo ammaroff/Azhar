@@ -34,6 +34,7 @@ namespace ExcelCode
             Fill_Student_Data(1, typeof(Osol_1));
 
             Fill_Student_Data(2, typeof(Osol_2));
+            Fill_Student_Data(9, typeof(Sh_1));
 
 
         }
@@ -81,7 +82,7 @@ namespace ExcelCode
                         {
                             //تخلفات 
                             record.SetLastYearSubject(row.SubjName, row.SubjYName, new object[] {
-                            row.OralDeg, null, row.WriringDeg, null,
+                            row.OralDeg, row.OralDeg, row.WriringDeg, row.WriringDeg,
                            row.LastTotal,
                             row.Total==row.LastTotal? null:row.Total,
                            row.LastGrade,
@@ -91,24 +92,16 @@ namespace ExcelCode
                         }
                         else
                         {
-                            record.Set(row.SubjId, new object[] {
-                            row.OralDeg, null, row.WriringDeg, null,
+                            //Console.WriteLine("IsFromLastYear {0} HelpDegOnSub {1}", row.IsFromLastYear, row.HelpDegOnSub);//, row.IsFromLastYear.GetType().Name, row.HelpDegOnSub.GetType().Name);
+                            record.Set(row.SubjId, row.subjectState, row.IsFromLastYear, row.HelpDegOnSub, new object[] {
+                            row.OralDeg, row.OralDeg,
+
+                                row.WriringDeg, row.WriringDeg,
                            row.LastTotal,
                             row.Total==row.LastTotal? null:row.Total,
                            row.LastGrade,
                            row.Grade==row.LastGrade?null:row.Grade
-                            },
-                           //styles here 
-                           new string[] {
-                                row.subjectState=="Fail"?"FailSubj":null
-                            ,null
-                            ,null
-                            ,null
-                            ,null
-                            , row.Total==row.LastTotal?null:"HelpedSubjDegree"
-                            , null
-                            ,row.LastGrade==row.Grade?null:"HelpedSubjGrade"}
-                           );
+                            });
                         }
 
 
