@@ -132,6 +132,8 @@ namespace ExcelCode
                     Sheet.Cells["Y" + current.ToString()].Value = subjName;
                     Sheet.Cells["Y" + (current + 7).ToString()].Value = row.SubjYName;
 
+                    SetDegrees(subjid, subjName, row, i, 26);
+
                 }
                 #endregion
                 #region مادة التخلف الثانية
@@ -142,6 +144,8 @@ namespace ExcelCode
                     Sheet.Cells["AA" + current.ToString()].Value = subjName;
                     Sheet.Cells["AA" + (current + 7).ToString()].Value = row.SubjYName;
 
+                    SetDegrees(subjid, subjName, row, i, 28);
+
                 }
 
                 #endregion
@@ -150,11 +154,23 @@ namespace ExcelCode
             }
             int colIndex = subject.Start.Column;
 
-
+            SetDegrees(subjid, subjName, row, i, colIndex);
 
 
             #endregion
 
+
+
+
+
+
+
+
+
+        }
+
+        private void SetDegrees(int subjId,string subjName,dynamic row,int i, int colIndex)
+        {
             #region ألخانة الأولى شفوي بدون جبر
             //الخانة الأولى شفوي بدون جبر
             //
@@ -289,13 +305,6 @@ namespace ExcelCode
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////
             #endregion
-
-
-
-
-
-
-
         }
 
 
