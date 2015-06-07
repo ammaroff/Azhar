@@ -121,6 +121,7 @@ namespace ExcelCode
             string subjName = row.SubjName;
             var subject = Sheet.Cells["G3:W3"].FirstOrDefault(cell => cell.Text == subjName);
             int i = -1;
+            #endregion
 
             if (row.SubjYName != this.SubjYName || subject == null)
             {
@@ -157,7 +158,7 @@ namespace ExcelCode
             SetDegrees(subjid, subjName, row, i, colIndex);
 
 
-            #endregion
+          
 
 
 
@@ -223,22 +224,23 @@ namespace ExcelCode
             //الخانة الثالثة تحريري بدون جبر
             //
             i++;
+            string writingDeg = row.WriringDeg;
             if (subjName == "القرآن الكريم" && (row.subjectState == "Help" || row.subjectState == "Auto"))
             {
-                string writingDeg = row.WriringDeg;
+                
                 if (writingDeg.Parse<float?>().HasValue && writingDeg.Parse<float?>() < 25)
                 {
                     Sheet.Cells[current + i, colIndex].Value = 25;
                 }
                 else
                 {
-                    Sheet.Cells[current + i, colIndex].Value = row.writingDeg;
+                    Sheet.Cells[current + i, colIndex].Value = writingDeg;
                 }
 
             }
 
             else //باقي المواد
-                Sheet.Cells[current + i, colIndex].Value = row.writingDeg;
+                Sheet.Cells[current + i, colIndex].Value = writingDeg;
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////
             #endregion
@@ -250,7 +252,7 @@ namespace ExcelCode
             i++;
             if (subjName == "القرآن الكريم" && (row.subjectState == "Help" || row.subjectState == "Auto"))
             {
-                string writingDeg = row.WriringDeg;
+                
                 if (writingDeg.Parse<float?>().HasValue && writingDeg.Parse<float?>() < 25)
                 {
                     Sheet.Cells[current + i, colIndex].WithStyle("HelpedSubjDegree").Value = writingDeg;
@@ -275,36 +277,46 @@ namespace ExcelCode
             {
                 if (row.subjectState != "Fail")
                 {
+                    goto skip;
+                }
+            }
 
-                    if (row.IsFromLastYear)
+                    if (row.IsFromLastYear)  // مادة من العام المضي
                     {
-                        if (row.HelpDegOnSubj < 0)
+                        if (row.HelpDegOnSubj < 0) // درجة رأفة بالتقص
                             Sheet.Cells[current + i, colIndex].WithStyle("DeNewYearDgree(N)Old").Value = row.Total;
-                        else
+                        else // ليس له درجة رافة بالتقص
                         {
-                            Sheet.Cells[current + i, colIndex].WithStyle("DeNewYearDgree(N)").Value = row.Total;
+                            Sheet.Cells[current + i, colIndex].WithStyle("DegreeLastYear").Value = row.Total;
+
                         }
                     }
-                    else
-                    { Sheet.Cells[current + i, colIndex].WithStyle("DegreeLastYear").Value = row.LastTotal; }
+                    else // مادة جديدة وليست من العام الماضي
+                    {
+                        Sheet.Cells[current + i, colIndex].Value = row.LastTotal;
+                       
+                    }
 
 
-                }
-                else
+                
+                
                 { Sheet.Cells[current + i, colIndex].WithStyle("FailSubj").Value = row.LastTotal; }
 
 
-            }
-            else // باقي المواد
-            {
+          
+            
+           
                 Sheet.Cells[current + i, colIndex].Value = row.LastTotal;
 
-            }
 
 
 
-            ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        skip:
+
             #endregion
+            i++;
         }
 
 
