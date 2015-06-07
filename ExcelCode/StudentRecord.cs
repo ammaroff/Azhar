@@ -15,21 +15,27 @@ namespace ExcelCode
             cells.StyleName = styleName;
             return cells;
         }
+        public static T Parse<T>(this object value)
+        {
+            try { return (T)System.ComponentModel.TypeDescriptor.GetConverter(typeof(T)).ConvertFrom(value.ToString()); }
+            catch { return default(T); }
+        }
     }
     public class StudentRecord
     {
-        public string SubjectName { get; set; }
+        // public string SubjectName { get; set; }
         public string Irregular { get; set; }
         public int SheetNumber { get; set; }
+        public virtual string SubjYName { get;  }
         public StudentRecord(ExcelWorkbook excel)
         {
 
             SheetNumber = 0;
             Sheet = excel.Worksheets.ElementAtOrDefault(SheetNumber);
         }
-        public StudentRecord(string subjectName, string seatNo, string studentName, string irregular, string recStatus, int secretNo, string stdState)
+        public StudentRecord(string seatNo, string studentName, string irregular, string recStatus, int secretNo, string stdState)
         {
-            SubjectName = subjectName; SeatNo = seatNo; StudentName = studentName; Irregular = irregular; RecordStatus = recStatus; SecretNo = secretNo; StdState = stdState;
+            SeatNo = seatNo; StudentName = studentName; Irregular = irregular; RecordStatus = recStatus; SecretNo = secretNo; StdState = stdState;
 
         }
         public StudentRecord(int sheetNumber, string seatNo, string studentName, string recStatus, int secretNo)
@@ -52,7 +58,7 @@ namespace ExcelCode
 
         public virtual void SetStudet(int index)
         {
-            current += (index * inc);
+            current =start+ (index * inc);
             Sheet.Cells[current, 1].Value = SeatNo;
             Sheet.Cells[current, 2].Value = StudentName;
             Sheet.Cells[current, 3].Value = Irregular;
@@ -104,147 +110,184 @@ namespace ExcelCode
             }
         }
 
-        public virtual void Set(int s_index, string subjectState, bool IsFromLastYear, int? HelpDegOnSubj, int OrignalSubjId, object[] degrees)
+        public virtual void Set(dynamic row)
         {
 
 
-            for (int i = current; i < degrees.Length + current; i++)
+            #region إعدادات
+            int subjid = row.SubjId;
+            string subjName = row.SubjName;
+            var subject = Sheet.Cells["G3:V3"].FirstOrDefault(cell => cell.Text == subjName);
+            int i = -1;
+           
+            if (row.SubjYName != this.SubjYName  ||subject == null )
             {
-                int cellIndex = i - current;
-
-                int val = -1;
-                if (int.TryParse((string)degrees[i - current], out val))
+                #region مادة التخلف الأولى
+                if (Sheet.Cells["Y" + current.ToString()].Value == null)
                 {
+                    
+                    //اسم المادة
+                    Sheet.Cells["Y" + current.ToString()].Value = subjName;
+                    Sheet.Cells["Y" + (current+7).ToString()].Value = row.SubjYName;
 
-                    if (new int[] { 1, 2, 3, 4 }.Contains(OrignalSubjId))
-                    {
-                        if (ApplyQuran(s_index, subjectState, i, cellIndex, val)) continue; // درجات القران بالجبر
-                        if (ApplyDegrees(s_index, subjectState,IsFromLastYear,HelpDegOnSubj, i, cellIndex, val,degrees[i+1-current])) continue;
-                    }
-                    else
-                    {
-                        if (cellIndex == 1 || cellIndex == 2) continue; //لا تضع أي درجة في خانات الجبر
+                }
+                #endregion
+                #region مادة التخلف الثانية
+                else
+                if(Sheet.Cells["AA" + current.ToString()].Value == null)
+                {
+                    //اسم المادة
+                    Sheet.Cells["AA" + current.ToString()].Value = subjName;
+                    Sheet.Cells["AA" + (current + 7).ToString()].Value = row.SubjYName;
 
-                        Sheet.Cells[i, s_index].Value = val;
+                }
+
+                #endregion
+                return;
+
+            }
+            int colIndex = subject.Start.Column;
 
 
-                    }
 
 
+            #endregion
+
+            #region ألخانة الأولى شفوي بدون جبر
+            //الخانة الأولى شفوي بدون جبر
+            //
+            i++;
+            if (subjName == "القرآن الكريم" && (row.subjectState == "Help" || row.subjectState == "Auto"))
+            {
+                string oralDeg = row.OralDeg;
+                if (oralDeg.Parse<float?>().HasValue && oralDeg.Parse<float?>() < 25  )
+                {
+                    Sheet.Cells[current+i, colIndex].Value = 25;
                 }
                 else
                 {
-                    if (cellIndex == 1 || cellIndex == 2) continue; //لا تضع أي درجة في خانات الجبر
-                    string value = (string)degrees[i - current];
-                    Sheet.Cells[i, s_index].Value = value;
-                    ApplyGardes(s_index, subjectState, HelpDegOnSubj, degrees, i, cellIndex, value); // ضع التقدير
-
+                    if ( row.Oral != 0)
+                        Sheet.Cells[current+i, colIndex].Value = row.OralDeg;
                 }
 
-                //string styleName = styles[i - current];
-                //if (!string.IsNullOrWhiteSpace(styleName))
-                //{
-                //    Sheet.Cells[i, s_index].StyleName = styleName;
-                //}
+            }
+
+            else //باقي المواد
+                Sheet.Cells[current+i, colIndex].Value = row.OralDeg;
+
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
+            #endregion
 
 
-
-
-
-
+            #region الخانة الثانية
+            //الخانة الثانية
+            i++;
+            if (subjName == "القرآن الكريم" && (row.subjectState == "Help" || row.subjectState == "Auto"))
+            {
+                string oralDeg = row.OralDeg;
+                if (oralDeg.Parse<float?>().HasValue && oralDeg.Parse<float?>() < 25)
+                {
+                    Sheet.Cells[current + i, colIndex].WithStyle("HelpedSubjDegree").Value = row.OralDeg;
+                }
 
 
             }
-        }
 
-        private void ApplyGardes(int s_index, string subjectState, int? HelpDegOnSubj, object[] degrees, int i, int cellIndex, string value)
-        {
-            if (cellIndex == 6) //cellIndex 7  التقدير
+            //باقي المواد
+            //لا تفعل شيئا
+
+            ///////////////////////////////////////////////////////////////////////////////////////////////////
+            #endregion
+
+
+            #region الخانة الثالثة تحريري بدون جبر
+            //الخانة الثالثة تحريري بدون جبر
+            //
+            i++;
+            if (subjName == "القرآن الكريم" && (row.subjectState == "Help" || row.subjectState == "Auto"))
             {
-                if (subjectState == "Fail")
-                    Sheet.Cells[i, s_index].WithStyle("FailSubj").Value = (string)degrees[i + 1 - current];
+                string writingDeg = row.WriringDeg;
+                if (writingDeg.Parse<float?>().HasValue && writingDeg.Parse<float?>() < 25)
+                {
+                    Sheet.Cells[current + i, colIndex].Value = 25;
+                }
                 else
                 {
-                    if (!HelpDegOnSubj.HasValue || HelpDegOnSubj.Value < 0)
+                        Sheet.Cells[current + i, colIndex].Value = row.writingDeg;
+                }
+
+            }
+
+            else //باقي المواد
+                Sheet.Cells[current + i, colIndex].Value = row.writingDeg;
+
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
+            #endregion
+
+
+            #region الخانة الرابعة تحريري الجبر
+            //الخانة الرابعة تحريري الجبر
+            //
+            i++;
+            if (subjName == "القرآن الكريم" && (row.subjectState == "Help" || row.subjectState == "Auto"))
+            {
+                string writingDeg = row.WriringDeg;
+                if (writingDeg.Parse<float?>().HasValue && writingDeg.Parse<float?>() < 25)
+                {
+                    Sheet.Cells[current + i, colIndex].WithStyle("HelpedSubjDegree").Value = writingDeg;
+                }
+               
+
+            }
+
+            //باقي المواد
+            //لا تفعل شيئا
+
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
+            #endregion
+
+            #region الخانة الخامسة 
+
+            //
+            i++;
+          
+            
+            if (subjName == "القرآن الكريم" ) 
+            {
+                if (row.subjectState != "Fail")
+                {
+                    
+                    if (row.IsFromLastYear && row.HelpDegOnSubj<0)
                     {
-                        Sheet.Cells[i, s_index].WithStyle("DeNewYearGrade").Value = value;
+                        Sheet.Cells[current + i, colIndex].WithStyle("DeNewYearDgree(N)Old").Value = row.Total;
                     }
-                }
-
-            }
-            if (cellIndex == 7) //cellIndex  8 التقدير
-            {
-
-                if (HelpDegOnSubj.HasValue && HelpDegOnSubj.Value > 0)
-                {
-                    Sheet.Cells[i, s_index].WithStyle("HelpedSubjGrade").Value = value;
-                }
-
-
-            }
-        }
-
-        private bool ApplyDegrees(int s_index, string subjectState,bool IsFromLastYear,int? HelpDegOnSubj, int i, int cellIndex, int total,object lastTotal)
-        {
-            if (subjectState != "Fail")
-            {
-
-                if (HelpDegOnSubj.HasValue && HelpDegOnSubj.Value > 0 && IsFromLastYear)
-                {
-
-                    Sheet.Cells[i, s_index].WithStyle("DeNewYearDgree(N)Old").Value = total;
-                    return true;
-
-                }
-                if (!IsFromLastYear)
-                {
-                    Sheet.Cells[i, s_index].WithStyle("DeNewYearDgree(N)").Value = total;
-                    return true ;
-                }
-
-            }
-            else
-            {
-                Sheet.Cells[i, s_index].WithStyle("FailSubj").Value = lastTotal;
-
-            }
-            return false;
-        }
-
-        private bool ApplyQuran(int s_index, string subjectState, int i, int cellIndex, int val)
-        {
-            if (new string[] { "Help", "Auto" }.Contains(subjectState))
-            {
-                if (cellIndex == 0 || cellIndex == 2)
-                {
-                    if (val < 25)
-                    {
-                        Sheet.Cells[i, s_index].Value = 25;
-                        return true;
-                    }
-
-
                     else
-                    if (val != 0)
                     {
-                        Sheet.Cells[i, s_index].Value = val;
-                        return true;
+                        Sheet.Cells[current + i, colIndex].WithStyle("DeNewYearDgree(N)").Value = row.Total;
                     }
                 }
-                if (cellIndex == 1 || cellIndex == 3)
-                {
-                    if (val < 25)
-                    {
-                        Sheet.Cells[i, s_index].WithStyle("HelpedSubjDegree").Value = val;
-                        return true;
-                    }
-                }
-                
 
             }
-            return false;
+            else // باقي المواد
+            {
+                Sheet.Cells[current + i, colIndex].WithStyle("DeNewYearDgree(N)").Value = row.Total;
+
+            }
+
+
+
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
+            #endregion
+
+
+
+           
+
+
 
         }
+
+
 
         public virtual void SetLastYearSubject(string SubjectName, string Year, object[] degrees)
         {
@@ -274,10 +317,5 @@ namespace ExcelCode
 
 
 
-        public virtual void Set(int CellAddress, string subjectState, bool IsFromLastYear, int? HelpDegOnSubj, object[] degrees)
-        {
-            throw new Exception("لازم تنفذها");
-
-        }
     }
 }

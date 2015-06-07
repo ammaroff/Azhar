@@ -15,103 +15,112 @@ namespace ExcelCode
 
          
         }
-
-
-
-        public override void Set(int CellAddress,string subjectState, bool IsFromLastYear, int? HelpDegOnSubj, object[] degrees)
+        public override string SubjYName
         {
-            if (CellAddress == 1)//قران
+            get
             {
-                base.Set(13, subjectState,IsFromLastYear,HelpDegOnSubj,CellAddress, degrees);
-                return;
+                return "س1";
             }
-            if (CellAddress == 5)//لغة عربية
-            {
-                base.Set(7, subjectState,IsFromLastYear,HelpDegOnSubj,CellAddress, degrees);
-                return;
-            }
-            if (CellAddress == 6)//نظم إسلامية
-            {
-                base.Set(8, subjectState,IsFromLastYear,HelpDegOnSubj,CellAddress, degrees);
-                return;
-            }
-            if (CellAddress == 7)//علوم القرآن
-            {
-                base.Set(9, subjectState,IsFromLastYear,HelpDegOnSubj,CellAddress, degrees);
-                return;
-            }
-            if (CellAddress == 8)//منطق قديم
-            {
-                base.Set(10, subjectState,IsFromLastYear,HelpDegOnSubj,CellAddress, degrees);
-                return;
-            }
-            if (CellAddress == 9)//فقه
-            {
-                base.Set(11, subjectState,IsFromLastYear,HelpDegOnSubj,CellAddress, degrees);
-                return;
-            }
-            if (CellAddress == 10)//تاريخ السنة
-            {
-                base.Set(12, subjectState,IsFromLastYear,HelpDegOnSubj,CellAddress, degrees);
-                return;
-            }
-            if (CellAddress == 11)//تفسير تحليلي
-            {
-                base.Set(14, subjectState,IsFromLastYear,HelpDegOnSubj,CellAddress, degrees);
-                return;
-            }
-            if (CellAddress == 12)//حديث تحليلي
-            {
-                base.Set(15, subjectState,IsFromLastYear,HelpDegOnSubj,CellAddress, degrees);
-                return;
-            }
-            if (CellAddress == 13)//توحيد
-            {
-                base.Set(16, subjectState,IsFromLastYear,HelpDegOnSubj,CellAddress, degrees);
-                return;
-            }
-            if (CellAddress == 14)//أصول الدعوة
-            {
-                base.Set(17, subjectState,IsFromLastYear,HelpDegOnSubj,CellAddress, degrees);
-                return;
-            }
-            if (CellAddress == 15)//تصوف
-            {
-                base.Set(18, subjectState,IsFromLastYear,HelpDegOnSubj,CellAddress, degrees);
-                return;
-            }
-            if (CellAddress == 16)//ملل ونحل
-            {
-                base.Set(19, subjectState,IsFromLastYear,HelpDegOnSubj,CellAddress, degrees);
-                return;
-            }
-            if (CellAddress == 17)//قصص القرآن
-            {
-                base.Set(20, subjectState,IsFromLastYear,HelpDegOnSubj,CellAddress, degrees);
-                return;
-            }
-            if (CellAddress == 18)//علوم الحديث
-            {
-                base.Set(21, subjectState,IsFromLastYear,HelpDegOnSubj,CellAddress, degrees);
-                return;
-            }
-            if (CellAddress == 19)//اللغة الأوربية
-            {
-                base.Set(22, subjectState,IsFromLastYear,HelpDegOnSubj,CellAddress, degrees);
-                return;
-            }
-/*            if (CellAddress < 11 && CellAddress > 4)
-            {
-                base.Set(CellAddress + 2, subjectState,IsFromLastYear,HelpDegOnSubj,CellAddress, degrees);
-                return;
-            }
-            if (CellAddress < 20 && CellAddress > 10)
-            {
-                base.Set(CellAddress + 3, subjectState,IsFromLastYear,HelpDegOnSubj,CellAddress, degrees);
-                return;
-            }*/
 
-             }
+           
+        }
+
+
+
+        //        public override void Set(int CellAddress,dynamic row)
+        //        {
+        //            if (CellAddress == 1)//قران
+        //            {
+        //                base.Set(13, row);
+        //                return;
+        //            }
+        //            if (CellAddress == 5)//لغة عربية
+        //            {
+        //                base.Set(7, row);
+        //                return;
+        //            }
+        //            if (CellAddress == 6)//نظم إسلامية
+        //            {
+        //                base.Set(8, row);
+        //                return;
+        //            }
+        //            if (CellAddress == 7)//علوم القرآن
+        //            {
+        //                base.Set(9, row);
+        //                return;
+        //            }
+        //            if (CellAddress == 8)//منطق قديم
+        //            {
+        //                base.Set(10, row);
+        //                return;
+        //            }
+        //            if (CellAddress == 9)//فقه
+        //            {
+        //                base.Set(11, row);
+        //                return;
+        //            }
+        //            if (CellAddress == 10)//تاريخ السنة
+        //            {
+        //                base.Set(12, row);
+        //                return;
+        //            }
+        //            if (CellAddress == 11)//تفسير تحليلي
+        //            {
+        //                base.Set(14, row);
+        //                return;
+        //            }
+        //            if (CellAddress == 12)//حديث تحليلي
+        //            {
+        //                base.Set(15, row);
+        //                return;
+        //            }
+        //            if (CellAddress == 13)//توحيد
+        //            {
+        //                base.Set(16, row);
+        //                return;
+        //            }
+        //            if (CellAddress == 14)//أصول الدعوة
+        //            {
+        //                base.Set(17, row);
+        //                return;
+        //            }
+        //            if (CellAddress == 15)//تصوف
+        //            {
+        //                base.Set(18, row);
+        //                return;
+        //            }
+        //            if (CellAddress == 16)//ملل ونحل
+        //            {
+        //                base.Set(19, row);
+        //                return;
+        //            }
+        //            if (CellAddress == 17)//قصص القرآن
+        //            {
+        //                base.Set(20, row);
+        //                return;
+        //            }
+        //            if (CellAddress == 18)//علوم الحديث
+        //            {
+        //                base.Set(21, row);
+        //                return;
+        //            }
+        //            if (CellAddress == 19)//اللغة الأوربية
+        //            {
+        //                base.Set(22, row);
+        //                return;
+        //            }
+        ///*            if (CellAddress < 11 && CellAddress > 4)
+        //            {
+        //                base.Set(CellAddress + 2, row);
+        //                return;
+        //            }
+        //            if (CellAddress < 20 && CellAddress > 10)
+        //            {
+        //                base.Set(CellAddress + 3, row);
+        //                return;
+        //            }*/
+
+        //             }
 
     }
 }

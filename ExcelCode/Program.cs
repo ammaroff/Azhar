@@ -35,6 +35,7 @@ namespace ExcelCode
 
             Fill_Student_Data(2, typeof(Osol_2));
             Fill_Student_Data(9, typeof(Sh_1));
+            Fill_Student_Data(10, typeof(Sh_2));
 
 
         }
@@ -78,31 +79,10 @@ namespace ExcelCode
 
                     foreach (var row in rows)
                     {
-                        if (row.SubjYearId != ClassId)
-                        {
-                            //تخلفات 
-                            record.SetLastYearSubject(row.SubjName, row.SubjYName, new object[] {
-                            row.OralDeg, row.OralDeg, row.WriringDeg, row.WriringDeg,
-                           row.LastTotal,
-                            row.Total==row.LastTotal? null:row.Total,
-                           row.LastGrade,
-                           row.Grade==row.LastGrade?null:row.Grade
-                            });
-
-                        }
-                        else
-                        {
+                       
                             //Console.WriteLine("IsFromLastYear {0} HelpDegOnSub {1}", row.IsFromLastYear, row.HelpDegOnSub);//, row.IsFromLastYear.GetType().Name, row.HelpDegOnSub.GetType().Name);
-                            record.Set(row.SubjId, row.subjectState, row.IsFromLastYear, row.HelpDegOnSub, new object[] {
-                            row.OralDeg, row.OralDeg,
-
-                                row.WriringDeg, row.WriringDeg,
-                           row.LastTotal,
-                            row.Total==row.LastTotal? null:row.Total,
-                           row.LastGrade,
-                           row.Grade==row.LastGrade?null:row.Grade
-                            });
-                        }
+                            record.Set(row);
+                       
 
 
                     }
