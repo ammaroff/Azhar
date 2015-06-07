@@ -54,7 +54,7 @@ namespace ExcelCode
                 var groups = data.GroupBy(rows => rows.Num);
                 Console.WriteLine("getting data from database for classid {0} and total students  : {1}", record.ClassId, groups.Count());
              
-           
+            
                 groups.ToList().ForEach(rows =>
                 {
 

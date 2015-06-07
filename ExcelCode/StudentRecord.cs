@@ -26,7 +26,7 @@ namespace ExcelCode
         // public string SubjectName { get; set; }
         public string Irregular { get; set; }
         public int SheetNumber { get; set; }
-        public virtual string SubjYName { get;  }
+        public virtual string SubjYName { get; }
         public StudentRecord(ExcelWorkbook excel)
         {
 
@@ -50,7 +50,7 @@ namespace ExcelCode
         protected ExcelWorksheet Sheet { get; set; }
 
         public string StudentName { get; set; }
-        public virtual int ClassId { get;  }
+        public virtual int ClassId { get; }
 
         public const int inc = 8;
         public const int start = 5;
@@ -60,7 +60,7 @@ namespace ExcelCode
 
         public virtual void SetStudet(int index)
         {
-            current =start+ (index * inc);
+            current = start + (index * inc);
             Sheet.Cells[current, 1].Value = SeatNo;
             Sheet.Cells[current, 2].Value = StudentName;
             Sheet.Cells[current, 3].Value = Irregular;
@@ -119,24 +119,24 @@ namespace ExcelCode
             #region إعدادات
             int subjid = row.SubjId;
             string subjName = row.SubjName;
-            var subject = Sheet.Cells["G3:V3"].FirstOrDefault(cell => cell.Text == subjName);
+            var subject = Sheet.Cells["G3:W3"].FirstOrDefault(cell => cell.Text == subjName);
             int i = -1;
-           
-            if (row.SubjYName != this.SubjYName  ||subject == null )
+
+            if (row.SubjYName != this.SubjYName || subject == null)
             {
                 #region مادة التخلف الأولى
                 if (Sheet.Cells["Y" + current.ToString()].Value == null)
                 {
-                    
+
                     //اسم المادة
                     Sheet.Cells["Y" + current.ToString()].Value = subjName;
-                    Sheet.Cells["Y" + (current+7).ToString()].Value = row.SubjYName;
+                    Sheet.Cells["Y" + (current + 7).ToString()].Value = row.SubjYName;
 
                 }
                 #endregion
                 #region مادة التخلف الثانية
                 else
-                if(Sheet.Cells["AA" + current.ToString()].Value == null)
+                if (Sheet.Cells["AA" + current.ToString()].Value == null)
                 {
                     //اسم المادة
                     Sheet.Cells["AA" + current.ToString()].Value = subjName;
@@ -162,20 +162,21 @@ namespace ExcelCode
             if (subjName == "القرآن الكريم" && (row.subjectState == "Help" || row.subjectState == "Auto"))
             {
                 string oralDeg = row.OralDeg;
-                if (oralDeg.Parse<float?>().HasValue && oralDeg.Parse<float?>() < 25  )
+                if (oralDeg.Parse<float?>().HasValue && oralDeg.Parse<float?>() < 25)
                 {
-                    Sheet.Cells[current+i, colIndex].Value = 25;
+                    Sheet.Cells[current + i, colIndex].Value = 25;
                 }
                 else
                 {
-                    if ( row.Oral != 0)
-                        Sheet.Cells[current+i, colIndex].Value = row.OralDeg;
+                    if (row.Oral != 0)
+                        Sheet.Cells[current + i, colIndex].Value = row.OralDeg;
                 }
 
             }
 
             else //باقي المواد
-                Sheet.Cells[current+i, colIndex].Value = row.OralDeg;
+                if (row.Oral != 0)
+                Sheet.Cells[current + i, colIndex].Value = row.OralDeg;
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////
             #endregion
@@ -215,7 +216,7 @@ namespace ExcelCode
                 }
                 else
                 {
-                        Sheet.Cells[current + i, colIndex].Value = row.writingDeg;
+                    Sheet.Cells[current + i, colIndex].Value = row.writingDeg;
                 }
 
             }
@@ -238,7 +239,7 @@ namespace ExcelCode
                 {
                     Sheet.Cells[current + i, colIndex].WithStyle("HelpedSubjDegree").Value = writingDeg;
                 }
-               
+
 
             }
 
@@ -252,27 +253,35 @@ namespace ExcelCode
 
             //
             i++;
-          
-            
-            if (subjName == "القرآن الكريم" ) 
+
+
+            if (subjName == "القرآن الكريم")
             {
                 if (row.subjectState != "Fail")
                 {
-                    
-                    if (row.IsFromLastYear && row.HelpDegOnSubj<0)
+
+                    if (row.IsFromLastYear)
                     {
-                        Sheet.Cells[current + i, colIndex].WithStyle("DeNewYearDgree(N)Old").Value = row.Total;
+                        if (row.HelpDegOnSubj < 0)
+                            Sheet.Cells[current + i, colIndex].WithStyle("DeNewYearDgree(N)Old").Value = row.Total;
+                        else
+                        {
+                            Sheet.Cells[current + i, colIndex].WithStyle("DeNewYearDgree(N)").Value = row.Total;
+                        }
                     }
                     else
-                    {
-                        Sheet.Cells[current + i, colIndex].WithStyle("DeNewYearDgree(N)").Value = row.Total;
-                    }
+                    { Sheet.Cells[current + i, colIndex].WithStyle("DegreeLastYear").Value = row.LastTotal; }
+
+
                 }
+                else
+                { Sheet.Cells[current + i, colIndex].WithStyle("FailSubj").Value = row.LastTotal; }
+
 
             }
             else // باقي المواد
             {
-                Sheet.Cells[current + i, colIndex].WithStyle("DeNewYearDgree(N)").Value = row.Total;
+                Sheet.Cells[current + i, colIndex].Value = row.LastTotal;
 
             }
 
@@ -283,7 +292,7 @@ namespace ExcelCode
 
 
 
-           
+
 
 
 
