@@ -31,16 +31,15 @@ namespace ExcelCode
 
 
 
-            Fill_Student_Data(1, typeof(Osol_1));
-
-            Fill_Student_Data(2, typeof(Osol_2));
-            Fill_Student_Data(9, typeof(Sh_1));
-            Fill_Student_Data(10, typeof(Sh_2));
+            Fill_Student_Data(typeof(Osol_1));
+            Fill_Student_Data(typeof(Osol_2));
+            Fill_Student_Data(typeof(Sh_1));
+            Fill_Student_Data(typeof(Sh_2));
 
 
         }
 
-        private static void Fill_Student_Data(int ClassId, Type type)
+        private static void Fill_Student_Data(Type type)
         {
 
             FileInfo newFile = new FileInfo(type.Name + ".xlsx");
@@ -48,13 +47,13 @@ namespace ExcelCode
             Console.WriteLine("Openning " + newFile.Name + " file template");
             using (ExcelPackage pkg = new ExcelPackage(newFile))
             {
-
+                var record = (StudentRecord)Activator.CreateInstance(type, pkg.Workbook);
                 Console.WriteLine("create excel file");
-                var data = connect(ClassId);
+                var data = connect(record.ClassId);
                 int i = 0;
                 var groups = data.GroupBy(rows => rows.Num);
-                Console.WriteLine("getting data from database for classid {0} and total students  : {1}", ClassId, groups.Count());
-                var record = (StudentRecord)Activator.CreateInstance(type,pkg.Workbook);
+                Console.WriteLine("getting data from database for classid {0} and total students  : {1}", record.ClassId, groups.Count());
+             
            
                 groups.ToList().ForEach(rows =>
                 {

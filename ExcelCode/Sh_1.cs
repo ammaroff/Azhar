@@ -13,6 +13,24 @@ namespace ExcelCode
         public Sh_1(ExcelWorkbook excel)
               : base(excel)
         { }
+        public override int ClassId
+        {
+            get
+            {
+                return 9;
+            }
+
+          
+        }
+        public override string SubjYName
+        {
+            get
+            {
+                return "س1";
+            }
+
+
+        }
 
         //public override void Set(int CellAddress, dynamic row)
         //{
@@ -81,7 +99,7 @@ namespace ExcelCode
         //        base.Set(20, row);
         //        return;
         //    }
-            
+
         //}
 
     }

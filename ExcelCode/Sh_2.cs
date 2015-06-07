@@ -14,6 +14,24 @@ namespace ExcelCode
         public Sh_2(ExcelWorkbook excel)
               : base(excel)
         { }
+        public override int ClassId
+        {
+            get
+            {
+                return 10;
+            }
+
+
+        }
+        public override string SubjYName
+        {
+            get
+            {
+                return "س2";
+            }
+
+
+        }
         //public override void Set(int CellAddress, dynamic row)
         //{
         //    if (CellAddress == 2)//القرآن الكريم

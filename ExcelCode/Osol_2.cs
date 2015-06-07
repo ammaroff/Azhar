@@ -15,6 +15,15 @@ namespace ExcelCode
 
             
         }
+        public override int ClassId
+        {
+            get
+            {
+                return 2;
+            }
+
+           
+        }
         public override string SubjYName
         {
             get

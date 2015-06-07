@@ -50,6 +50,8 @@ namespace ExcelCode
         protected ExcelWorksheet Sheet { get; set; }
 
         public string StudentName { get; set; }
+        public virtual int ClassId { get;  }
+
         public const int inc = 8;
         public const int start = 5;
         public int current = start;
