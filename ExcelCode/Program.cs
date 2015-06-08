@@ -53,8 +53,8 @@ namespace ExcelCode
                 int i = 0;
                 var groups = data.GroupBy(rows => rows.Num);
                 Console.WriteLine("getting data from database for classid {0} and total students  : {1}", record.ClassId, groups.Count());
-             
-            
+                
+
                 groups.ToList().ForEach(rows =>
                 {
 
@@ -88,8 +88,10 @@ namespace ExcelCode
                     record.SetGroup(rows);
                     record.SetTotal(Isfinal, total, oldTotal);
                     record.SetGrade(Isfinal, StdGrade, StdGrade);
+                    
                    
                 });
+                
                 pkg.Save();
             }
         }

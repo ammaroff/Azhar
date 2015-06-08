@@ -15,15 +15,23 @@ namespace ExcelCode
             cells.StyleName = styleName;
             return cells;
         }
-        public static void AddNote(this ExcelWorksheet sheet,int rowIndex,string note,params object [] p)
+        public static void AddNote(this ExcelWorksheet sheet, int rowIndex, string note, params object[] p)
         {
             note = string.Format(note, p);
-           
-            rowIndex = (((rowIndex - 5) / 8) * 8)+5;
+            rowIndex = (((rowIndex - 5) / 8) * 8) + 5;
             sheet.Cells["AJ" + rowIndex.ToString()].Style.WrapText = true;
-            if (sheet.Cells["AJ" + rowIndex.ToString()].Value == null)
-                sheet.Cells["AJ" + rowIndex.ToString()].Value = "";
-            sheet.Cells["AJ" + rowIndex.ToString()].Value += Environment.NewLine + note;
+            if (sheet.Cells["AJ" + rowIndex.ToString()].Text == Environment.NewLine + "غائب بدون عذر")
+            {
+
+                return;
+            }
+            else
+            {
+
+                if (sheet.Cells["AJ" + rowIndex.ToString()].Value == null)
+                    sheet.Cells["AJ" + rowIndex.ToString()].Value = "";
+                sheet.Cells["AJ" + rowIndex.ToString()].Value += Environment.NewLine + note;
+            }
         }
         public static T Parse<T>(this object value)
         {
@@ -169,16 +177,18 @@ namespace ExcelCode
 
         }
 
-        public virtual void SetGroup(IGrouping<dynamic,dynamic> rows)
+
+        public virtual void SetGroup(IGrouping<dynamic, dynamic> rows)
         {
+
             #region الغائب
-            if(rows
-                .Where(i=> !i.IsFromLastYear)
-                .All(i=>i.Grade=="غ"))
+            if (rows
+                .Where(i => !i.IsFromLastYear)
+                .All(i => i.Grade == "غ"))
             {
                 Sheet.Cells[current, 31].Value = "غائب ";
-                Sheet.AddNote(current,"غائب بدون عذر");
-                
+                Sheet.AddNote(current, "غائب بدون عذر");
+
             }
             #endregion
 
@@ -189,17 +199,17 @@ namespace ExcelCode
             {
                 // احسب عدد مواد الرسوب
                 int failCount = rows.Count(i => i.subjectState == "Fail");
-                if(failCount ==1)
+                if (failCount == 1)
                     Sheet.AddNote(current, " راسب في مادة واحدة", failCount);
                 if (failCount == 2)
                     Sheet.AddNote(current, " راسب في مادتين ", failCount);
-                if (failCount>2 && failCount < 11)
+                if (failCount > 2 && failCount < 11)
                     Sheet.AddNote(current, " راسب في {0} مواد ", failCount);
-                if (failCount > 10 )
-                    Sheet.AddNote(current, "راسب في {0} مادة",failCount);
+                if (failCount > 10)
+                    Sheet.AddNote(current, "راسب في {0} مادة", failCount);
 
                 int maxStayId = rows.FirstOrDefault().MaxStayId;
-                if (new int[] {2,6,11 }.Contains(maxStayId))
+                if (new int[] { 2, 6, 11 }.Contains(maxStayId))
                 {
                     Sheet.Cells[current, 31].Value = "راسب وينظر في فصله ";
                 }
@@ -207,11 +217,54 @@ namespace ExcelCode
             }
             #endregion
 
-            #region ألناجح ومجبور في القران
- //           If row.SubjId == (1 or 2 or 3 or 4) && subjectState == "Help" && row.WriringDeg <= 23 ? "جبر بـ " + (25 - row.WriringDeg) + " في شفوي القرآن الكريم " + SubjYName
- //If row.SubjId == (1 or 2 or 3 or 4) && subjectState == "Help" && row.WriringDeg <= 23 ? "جبر بـ " + (25 - row.WriringDeg) + " في تحريري القرآن الكريم " + SubjYName
+            #region حالة الجبر
+            // في حالة الجبر في مادة أو مادتين: جبر بــ (عدد الدرجات) في(اسم المادة) لينجح بتقدير
+            //If row.HelpDegOnSubj > 0 ? "جبر بـ " + row.HelpDegOnSubj + " في " + row.SubjName + " " + row.SubjYName + " - "
+            //لو كان هناك مادة ثانية وثالثة يضافون بنفس الطريقة
+            //ثم تضاف في النهاية كلمة + "لينجح بتقدير"
+            bool anyHelp = false;
+            foreach (var row in rows.Where(i => i.HelpDegOnSubj > 0 && i.SubjName != "القرآن الكريم"))
+            {
+                anyHelp = true;
+                string LastYearSubjName = (SubjYName != row.SubjYName) ? row.SubjYName : "";
+                Sheet.AddNote(current, "جبر بـ{0} درجات في {1} {2}", (int)row.HelpDegOnSubj, (string)row.SubjName, LastYearSubjName);
+
+            }
+            if (anyHelp)
+                Sheet.AddNote(current, "لينجح بتقدير {0}", (string)rows.FirstOrDefault().StdGrade);
+            #endregion
+
+            #region منقول بمواد
+            /*
+            //في حالة النقل بمادة أو مادتين بدون جبر
+            //مثال للكود المقترح للمادة
+            If row.StdStat == "منقول بمادة" ? "منقول بمادة "+ row.SubjName [that has] row.subjctState == "Fail" +" "+ row.SubjYName
+
+            //الكود المقترح للمادتين
+            If row.StdStat == "منقول بمادتين" ? "منقول بمادتين "+ row.SubjName [that has] row.subjctState == "Fail" +" "+ row.SubjYName +" و" row.SubjName [that has] row.subjctState == "Fail" +" "+ row.SubjYName
+            */
+            if (rows.FirstOrDefault().StdState.Contains("منقول بماد") && rows.Where(i => i.subjectState == "Fail") != null)
+            {
+
+                var subjectsWithHelpFromFailArray = rows.Where(i => i.subjectState == "Fail").Select(i =>  (string)i.SubjName +" " +( ((string)i.SubjYName) == this.SubjYName ? "" : ((string)i.SubjYName))).ToArray();
+                var subjectsWithHelpFromFail= string.Join(" و", subjectsWithHelpFromFailArray);
+                Sheet.AddNote(current, (string)rows.FirstOrDefault().StdState +" "+subjectsWithHelpFromFail);
+
+            }
 
             #endregion
+
+            #region منح الدرجة الأعلى
+            ///في حالة المنح في المجموع الكلي .. الكود المقترح
+            // If row.HelpDegOnTotalDeg > 0 ? "منح " + row.HelpDegOnTotalDeg + "درجة أو درجات في المجموع الكلي ليتمتع بالتقدير الأعلى"
+            if (rows.FirstOrDefault().HelpDegOnTotalDeg > 0)
+            {
+                Sheet.AddNote(current, "منح {0} درجات في المجموع الكلي ليتمتع بالتقدير الأعلى",(int)rows.FirstOrDefault().HelpDegOnTotalDeg);
+            }
+            #endregion
+
+
+
 
 
         }
@@ -250,16 +303,16 @@ namespace ExcelCode
             i++;
             if (subjName == "القرآن الكريم" && (row.subjectState == "Help" || row.subjectState == "Auto" || row.subjectState == "Passed"))
             {
-                   string oralDeg = row.OralDeg;
-                if (oralDeg.Parse<float?>().HasValue && oralDeg.Parse<float?>()  < 25)
+                string oralDeg = row.OralDeg;
+                if (oralDeg.Parse<float?>().HasValue && oralDeg.Parse<float?>() < 25)
                 {
                     Sheet.Cells[current + i, colIndex].WithStyle("HelpedSubjDegree").Value = row.OralDeg;
                 }
-                if (oralDeg.Parse<float?>().HasValue && oralDeg.Parse<float?>() < 24 && oralDeg.Parse<float?>() > 18)
+                if (oralDeg.Parse<float?>().HasValue && oralDeg.Parse<float?>() < 24 && oralDeg.Parse<float?>() > 18 && row.subjectState == "Help")
                 {
-                    double help = row.HelpDegOnSubj;
+                    double help = 25 - oralDeg.Parse<double>();
                     string LastYearSubjName = (SubjYName != row.SubjYName) ? row.SubjYName : "";
-                    Sheet.AddNote(current, "جبر ب {0} درجات في شفوي القران الكريم {1}", help, LastYearSubjName);
+                    Sheet.AddNote(current, "جبر بـ{0} درجات في شفوي القران الكريم {1}", help, LastYearSubjName);
                 }
 
 
@@ -312,9 +365,9 @@ namespace ExcelCode
                 }
                 if (writingDeg.Parse<float?>().HasValue && writingDeg.Parse<float?>() < 24 && writingDeg.Parse<float?>() > 18)
                 {
-                    double help = row.HelpDegOnSubj;
+                    float help = 25 - writingDeg.Parse<float>();
                     string LastYearSubjName = (SubjYName != row.SubjYName) ? row.SubjYName : "";
-                    Sheet.AddNote(current, "جبر ب {0} درجات في تحريري القران الكريم {1}", help, LastYearSubjName);
+                    Sheet.AddNote(current, "جبر بـ{0} درجات في تحريري القران الكريم {1}", help, LastYearSubjName);
                 }
 
 
@@ -334,44 +387,45 @@ namespace ExcelCode
 
             if (subjName == "القرآن الكريم" && row.subjectState == "Fail")
             {
-                //    if (row.subjectState == "Fail")
-                //      {
-                goto skip;
-                //      }
-            }
 
-            if (row.IsFromLastYear)  // مادة من العام الماضي
+
+            }
+            else
             {
-                if (row.HelpDegOnSubj < 0) // درجة رأفة بالتقص
-                    Sheet.Cells[current + i, colIndex].WithStyle("DeNewYearDgree(N)Old").Value = row.Total;
-                else // ليس له درجة رافة بالتقص
+
+                if (row.IsFromLastYear)  // مادة من العام الماضي
                 {
-                    Sheet.Cells[current + i, colIndex].WithStyle("DegreeLastYear").Value = row.LastTotal;
+                    if (row.HelpDegOnSubj < 0) // درجة رأفة بالتقص
+                        Sheet.Cells[current + i, colIndex].WithStyle("DeNewYearDgree(N)Old").Value = row.Total;
+                    else // ليس له درجة رافة بالتقص
+                    {
+                        Sheet.Cells[current + i, colIndex].WithStyle("DegreeLastYear").Value = row.LastTotal;
+
+                    }
+                }
+                else // مادة جديدة وليست من العام الماضي
+                {
+                    if (row.HelpDegOnSubj < 0) // له درجة رأفة بالنقص
+                    {
+                        Sheet.Cells[current + i, colIndex].WithStyle("DeNewYearDgree(N)").Value = row.Total;
+                    }
+                    else
+                        if (row.subjectState == "Fail")
+                    {
+                        Sheet.Cells[current + i, colIndex].WithStyle("FailSubj").Value = row.LastTotal;
+                    }
+                    else
+                        Sheet.Cells[current + i, colIndex].Value = row.LastTotal;
 
                 }
+
+
             }
-            else // مادة جديدة وليست من العام الماضي
-            {
-                if (row.HelpDegOnSubj < 0) // له درجة رأفة بالنقص
-                {
-                    Sheet.Cells[current + i, colIndex].WithStyle("DeNewYearDgree(N)").Value = row.Total;
-                }
-                else
-                    if (row.subjectState == "Fail")
-                {
-                    Sheet.Cells[current + i, colIndex].WithStyle("FailSubj").Value = row.LastTotal;
-                }
-                else
-                    Sheet.Cells[current + i, colIndex].Value = row.LastTotal;
-
-            }
 
 
 
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-        skip:
 
             #endregion
 
@@ -380,30 +434,32 @@ namespace ExcelCode
             //
             i++;
 
-            if (subjName == "القرآن الكريم")//&& Convert.ToInt32(row.Total) >= 50)
+
+            if (subjName == "القرآن الكريم" && (row.Total == "غ" || ((object)(row.Total)).Parse<float?>() >= 50))
             {
-                if (row.Total == "غ" || Convert.ToInt32(row.Total) >= 50)
+
+            }
+            else
+            {
+
+
+                if (row.HelpDegOnSubj > 0)  // درجة الرأفة بزيادة
                 {
-                    goto skip2;
+
+                    Sheet.Cells[current + i, colIndex].WithStyle("HelpedSubjDegree").Value = row.Total;
+                }
+                else // له درجة رأفة بالنقص
+
+
+                        if (row.HelpDegOnSubj < 0) // له درجة رأفة بالنقص
+                {
+                    Sheet.Cells[current + i, colIndex].Value = row.LastTotal;
                 }
             }
 
-            if (row.HelpDegOnSubj > 0)  // درجة الرأفة بزيادة
-            {
 
-                Sheet.Cells[current + i, colIndex].WithStyle("HelpedSubjDegree").Value = row.Total;
-            }
-            else // له درجة رأفة بالنقص
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-                    if (row.HelpDegOnSubj < 0) // له درجة رأفة بالنقص
-            {
-                Sheet.Cells[current + i, colIndex].Value = row.LastTotal;
-            }
-
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-        skip2:
 
             #endregion
             #region الخانة السابعة .. التقدير النهائي
