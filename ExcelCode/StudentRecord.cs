@@ -263,6 +263,19 @@ namespace ExcelCode
             }
             #endregion
 
+            #region منح النجاح 
+            //في حالة المنح ليصل للحد الأدنى للنجاح
+            //لم أفعله بعد
+            //IF(row.IsFinal == 1 && row.TotalBefore < row.HalfMaxTotal) ? "منح " + row.HalfMaxTotal - row.TotalBefore + " في المجموع الكلي ليصل للحد الأدنى للنجاح" : null
+
+            var first = rows.FirstOrDefault();
+            int? totalBefore = ((string)first.TotalBefore).Parse<int?>();
+            if (first.IsFinal && totalBefore.HasValue&& totalBefore < first.HalfMaxTotal)
+            {
+                Sheet.AddNote(current, "منح {0} في المجموع الكلي ليصل للحد الأدنى للنجاح",  (int)first.HalfMaxTotal - totalBefore);
+            }
+            #endregion
+
 
 
 
