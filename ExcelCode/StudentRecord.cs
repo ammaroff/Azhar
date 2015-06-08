@@ -117,10 +117,10 @@ namespace ExcelCode
 
 
             #region إعدادات
-            int subjid = row.SubjId;
+            
             string subjName = row.SubjName;
             var subject = Sheet.Cells["G3:W3"].FirstOrDefault(cell => cell.Text == subjName);
-            int i = -1;
+            
             #endregion
 
             if (row.SubjYName != this.SubjYName || subject == null)
@@ -133,7 +133,7 @@ namespace ExcelCode
                     Sheet.Cells["Y" + current.ToString()].Value = subjName;
                     Sheet.Cells["Y" + (current + 7).ToString()].Value = row.SubjYName;
 
-                    SetDegrees(subjid, subjName, row, i, 26);
+                    SetDegrees( subjName, row, 26);
 
                 }
                 #endregion
@@ -145,7 +145,7 @@ namespace ExcelCode
                     Sheet.Cells["AA" + current.ToString()].Value = subjName;
                     Sheet.Cells["AA" + (current + 7).ToString()].Value = row.SubjYName;
 
-                    SetDegrees(subjid, subjName, row, i, 28);
+                    SetDegrees( subjName, row, 28);
 
                 }
 
@@ -155,10 +155,10 @@ namespace ExcelCode
             }
             int colIndex = subject.Start.Column;
 
-            SetDegrees(subjid, subjName, row, i, colIndex);
+            SetDegrees( subjName, row, colIndex);
 
 
-          
+
 
 
 
@@ -170,8 +170,10 @@ namespace ExcelCode
 
         }
 
-        private void SetDegrees(int subjId,string subjName,dynamic row,int i, int colIndex)
+        private void SetDegrees( string subjName, dynamic row,  int colIndex)
         {
+            int i = -1;
+
             #region ألخانة الأولى شفوي بدون جبر
             //الخانة الأولى شفوي بدون جبر
             //
@@ -227,7 +229,7 @@ namespace ExcelCode
             string writingDeg = row.WriringDeg;
             if (subjName == "القرآن الكريم" && (row.subjectState == "Help" || row.subjectState == "Auto"))
             {
-                
+
                 if (writingDeg.Parse<float?>().HasValue && writingDeg.Parse<float?>() < 25)
                 {
                     Sheet.Cells[current + i, colIndex].Value = 25;
@@ -252,7 +254,7 @@ namespace ExcelCode
             i++;
             if (subjName == "القرآن الكريم" && (row.subjectState == "Help" || row.subjectState == "Auto"))
             {
-                
+
                 if (writingDeg.Parse<float?>().HasValue && writingDeg.Parse<float?>() < 25)
                 {
                     Sheet.Cells[current + i, colIndex].WithStyle("HelpedSubjDegree").Value = writingDeg;
@@ -275,38 +277,48 @@ namespace ExcelCode
 
             if (subjName == "القرآن الكريم")
             {
-                if (row.subjectState != "Fail")
+                if (row.subjectState == "Fail")
                 {
                     goto skip;
                 }
             }
 
-                    if (row.IsFromLastYear)  // مادة من العام المضي
-                    {
-                        if (row.HelpDegOnSubj < 0) // درجة رأفة بالتقص
-                            Sheet.Cells[current + i, colIndex].WithStyle("DeNewYearDgree(N)Old").Value = row.Total;
-                        else // ليس له درجة رافة بالتقص
-                        {
-                            Sheet.Cells[current + i, colIndex].WithStyle("DegreeLastYear").Value = row.Total;
+            if (row.IsFromLastYear)  // مادة من العام المضي
+            {
+                if (row.HelpDegOnSubj < 0) // درجة رأفة بالتقص
+                    Sheet.Cells[current + i, colIndex].WithStyle("DeNewYearDgree(N)Old").Value = row.Total;
+                else // ليس له درجة رافة بالتقص
+                {
+                    Sheet.Cells[current + i, colIndex].WithStyle("DegreeLastYear").Value = row.LastTotal;
 
-                        }
-                    }
-                    else // مادة جديدة وليست من العام الماضي
-                    {
-                        Sheet.Cells[current + i, colIndex].Value = row.LastTotal;
-                       
-                    }
+                }
+            }
+            else // مادة جديدة وليست من العام الماضي
+            {
+
+                if (row.subjectState == "Fail")
+                {
+                    Sheet.Cells[current + i, colIndex].WithStyle("FailSubj").Value = row.LastTotal;
+
+                }
+                else
+                {
+                    Sheet.Cells[current + i, colIndex].Value = row.LastTotal;
+                }
 
 
-                
-                
-                { Sheet.Cells[current + i, colIndex].WithStyle("FailSubj").Value = row.LastTotal; }
 
 
-          
-            
-           
+
+
+
                 Sheet.Cells[current + i, colIndex].Value = row.LastTotal;
+
+            }
+
+
+
+
 
 
 
