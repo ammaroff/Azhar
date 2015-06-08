@@ -85,6 +85,7 @@ namespace ExcelCode
 
 
                     }
+                    record.SetGroup(rows);
                     record.SetTotal(Isfinal, total, oldTotal);
                     record.SetGrade(Isfinal, StdGrade, StdGrade);
                    

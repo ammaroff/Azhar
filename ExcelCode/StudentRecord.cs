@@ -15,6 +15,16 @@ namespace ExcelCode
             cells.StyleName = styleName;
             return cells;
         }
+        public static void AddNote(this ExcelWorksheet sheet,int rowIndex,string note,params object [] p)
+        {
+            note = string.Format(note, p);
+           
+            rowIndex = (((rowIndex - 5) / 8) * 8)+5;
+            sheet.Cells["AJ" + rowIndex.ToString()].Style.WrapText = true;
+            if (sheet.Cells["AJ" + rowIndex.ToString()].Value == null)
+                sheet.Cells["AJ" + rowIndex.ToString()].Value = "";
+            sheet.Cells["AJ" + rowIndex.ToString()].Value += Environment.NewLine + note;
+        }
         public static T Parse<T>(this object value)
         {
             try { return (T)System.ComponentModel.TypeDescriptor.GetConverter(typeof(T)).ConvertFrom(value.ToString()); }
@@ -170,6 +180,53 @@ namespace ExcelCode
 
         }
 
+        public virtual void SetGroup(IGrouping<dynamic,dynamic> rows)
+        {
+            #region الغائب
+            if(rows
+                .Where(i=> !i.IsFromLastYear)
+                .All(i=>i.Grade=="غ"))
+            {
+                Sheet.Cells[current, 31].Value = "غائب ";
+                Sheet.AddNote(current,"غائب بدون عذر");
+                
+            }
+            #endregion
+
+            #region الراسب
+
+
+            if (!rows.FirstOrDefault().IsFinal)//طالب راسب
+            {
+                // احسب عدد مواد الرسوب
+                int failCount = rows.Count(i => i.subjectState == "Fail");
+                if(failCount ==1)
+                    Sheet.AddNote(current, " راسب في مادة واحدة", failCount);
+                if (failCount == 2)
+                    Sheet.AddNote(current, " راسب في مادتين ", failCount);
+                if (failCount>2 && failCount < 11)
+                    Sheet.AddNote(current, " راسب في {0} مواد ", failCount);
+                if (failCount > 10 )
+                    Sheet.AddNote(current, "راسب في {0} مادة",failCount);
+
+                int maxStayId = rows.FirstOrDefault().MaxStayId;
+                if (new int[] {2,6,11 }.Contains(maxStayId))
+                {
+                    Sheet.Cells[current, 31].Value = "راسب وينظر في فصله ";
+                }
+
+            }
+            #endregion
+
+            #region ألناجح ومجبور في القران
+ //           If row.SubjId == (1 or 2 or 3 or 4) && subjectState == "Help" && row.WriringDeg <= 23 ? "جبر بـ " + (25 - row.WriringDeg) + " في شفوي القرآن الكريم " + SubjYName
+ //If row.SubjId == (1 or 2 or 3 or 4) && subjectState == "Help" && row.WriringDeg <= 23 ? "جبر بـ " + (25 - row.WriringDeg) + " في تحريري القرآن الكريم " + SubjYName
+
+            #endregion
+
+
+        }
+
         private void SetDegrees( string subjName, dynamic row,  int colIndex)
         {
             int i = -1;
@@ -211,6 +268,13 @@ namespace ExcelCode
                 {
                     Sheet.Cells[current + i, colIndex].WithStyle("HelpedSubjDegree").Value = row.OralDeg;
                 }
+                if (oralDeg.Parse<float?>().HasValue && oralDeg.Parse<float?>() < 24 && oralDeg.Parse<float?>() > 18)
+                {
+                    double help = row.HelpDegOnSubj;
+                    string LastYearSubjName = (SubjYName != row.SubjYName) ? row.SubjYName : "";
+                    Sheet.AddNote(current, "جبر ب {0} درجات في شفوي القران الكريم {1}", help, LastYearSubjName);
+                }
+
 
 
             }
@@ -258,6 +322,12 @@ namespace ExcelCode
                 if (writingDeg.Parse<float?>().HasValue && writingDeg.Parse<float?>() < 25)
                 {
                     Sheet.Cells[current + i, colIndex].WithStyle("HelpedSubjDegree").Value = writingDeg;
+                }
+                if (writingDeg.Parse<float?>().HasValue && writingDeg.Parse<float?>() < 24 && writingDeg.Parse<float?>() > 18)
+                {
+                    double help = row.HelpDegOnSubj;
+                    string LastYearSubjName = (SubjYName != row.SubjYName) ? row.SubjYName : "";
+                    Sheet.AddNote(current, "جبر ب {0} درجات في تحريري القران الكريم {1}", help, LastYearSubjName);
                 }
 
 
