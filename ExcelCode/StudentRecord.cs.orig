@@ -169,6 +169,9 @@ namespace ExcelCode
 
         }
 
+<<<<<<< HEAD
+        private void SetDegrees(int subjId, string subjName, dynamic row, int i, int colIndex)
+=======
         public virtual void SetGroup(IGrouping<dynamic,dynamic> rows)
         {
             #region الغائب
@@ -216,6 +219,8 @@ namespace ExcelCode
 
         }
 
+        private void SetDegrees( string subjName, dynamic row,  int colIndex)
+>>>>>>> notes-feature
         {
             #region الخانة الأولى شفوي
             //الخانة الأولى شفوي بدون جبر
