@@ -215,7 +215,7 @@ namespace ExcelCode
 
 
         }
-
+        private void SetDegrees(int subjId, string subjName, dynamic row, int i, int colIndex)
         {
             #region الخانة الأولى شفوي
             //الخانة الأولى شفوي بدون جبر
@@ -250,8 +250,8 @@ namespace ExcelCode
             i++;
             if (subjName == "القرآن الكريم" && (row.subjectState == "Help" || row.subjectState == "Auto" || row.subjectState == "Passed"))
             {
-                //   string oralDeg = row.OralDeg;
-                if (Convert.ToInt32(row.oralDeg) < 25)
+                   string oralDeg = row.OralDeg;
+                if (oralDeg.Parse<float?>().HasValue && oralDeg.Parse<float?>()  < 25)
                 {
                     Sheet.Cells[current + i, colIndex].WithStyle("HelpedSubjDegree").Value = row.OralDeg;
                 }
