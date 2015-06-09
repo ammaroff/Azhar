@@ -257,7 +257,7 @@ namespace ExcelCode
             //لو كان هناك مادة ثانية وثالثة يضافون بنفس الطريقة
             //ثم تضاف في النهاية كلمة + "لينجح بتقدير"
             bool anyHelp = false;
-            foreach (var row in rows.Where(i => i.HelpDegOnSubj > 0 && i.SubjName != "القرآن الكريم" && i.subjectState=="Help" ))
+            foreach (var row in rows.Where(i => i.HelpDegOnSubj > 0 && i.SubjName != "القرآن الكريم" && i.subjectState=="Help"  ))
             {
                 //الجبر الذي يكتب في الملاحظات هو الجبر الذي فوق درجتين .. يمكن معرفة ذلك من خلال 
                 // subjectState = Help
@@ -270,7 +270,7 @@ namespace ExcelCode
                 Sheet.AddNote(current, "جبر بـ{0}  في {1} {2}", strDegrees((int)row.HelpDegOnSubj), (string)row.SubjName, LastYearSubjName);
 
             }
-            if (anyHelp)
+            if (anyHelp && !stdState.Contains("منقول")  )
                 Sheet.AddNote(current, "لينجح بتقدير");
             #endregion
 
