@@ -43,7 +43,7 @@ namespace ExcelCode
         {
 
             FileInfo newFile = new FileInfo(type.Name + ".xlsx");
-            
+
             Console.WriteLine("Openning " + newFile.Name + " file template");
             using (ExcelPackage pkg = new ExcelPackage(newFile))
             {
@@ -53,7 +53,7 @@ namespace ExcelCode
                 int i = 0;
                 var groups = data.GroupBy(rows => rows.Num);
                 Console.WriteLine("getting data from database for classid {0} and total students  : {1}", record.ClassId, groups.Count());
-                
+
 
                 groups.ToList().ForEach(rows =>
                 {
@@ -64,7 +64,7 @@ namespace ExcelCode
                     record.SeatNo = currentStudent;
                     record.StudentName = rows.First().StdName;
                     record.Irregular = rows.First().IsIrregular;
-                    record.RecordStatus = rows.First().StdType;
+                    record.RecordStatus = rows.First().Des;
                     record.SecretNo = rows.First().SecrtNum;
                     record.StdState = rows.First().StdState;
                     record.SetStudet(i++);
@@ -75,23 +75,25 @@ namespace ExcelCode
                     string oldTotal = rows.First().TotalBefore;
                     int Isfinal = Convert.ToInt32(rows.First().IsFinal);
                     string StdGrade = rows.First().StdGrade;
+                    string oldStdGrade = rows.First().TotalGradeBefore;
 
                     foreach (var row in rows)
                     {
-                       
-                            //Console.WriteLine("IsFromLastYear {0} HelpDegOnSub {1}", row.IsFromLastYear, row.HelpDegOnSub);//, row.IsFromLastYear.GetType().Name, row.HelpDegOnSub.GetType().Name);
-                            record.Set(row);
-                       
+
+                        //Console.WriteLine("IsFromLastYear {0} HelpDegOnSub {1}", row.IsFromLastYear, row.HelpDegOnSub);//, row.IsFromLastYear.GetType().Name, row.HelpDegOnSub.GetType().Name);
+                        record.Set(row);
+
 
 
                     }
                     record.SetGroup(rows);
                     record.SetTotal(Isfinal, total, oldTotal);
-                    record.SetGrade(Isfinal, StdGrade, StdGrade);
-                    
-                   
+                    record.SetGrade(Isfinal, StdGrade, oldStdGrade);
+
+
+
                 });
-                
+
                 pkg.Save();
             }
         }
