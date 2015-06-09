@@ -237,7 +237,7 @@ namespace ExcelCode
             //لو كان هناك مادة ثانية وثالثة يضافون بنفس الطريقة
             //ثم تضاف في النهاية كلمة + "لينجح بتقدير"
             bool anyHelp = false;
-            foreach (var row in rows.Where(i => i.HelpDegOnSubj > 0 && i.SubjName != "القرآن الكريم" && i.subjectState!="Auto" ))
+            foreach (var row in rows.Where(i => i.HelpDegOnSubj > 0 && i.SubjName != "القرآن الكريم" && i.subjectState=="Help" ))
             {
                 //الجبر الذي يكتب في الملاحظات هو الجبر الذي فوق درجتين .. يمكن معرفة ذلك من خلال 
                 // subjectState = Help
