@@ -28,20 +28,25 @@ namespace ExcelCode
                                         "عذر مرضي مقبول عن مواد الترم الثاني",
                                         "عذر مرضي مقبول عن مواد الترم الثاني",
                                         "طالب ترك الدراسة"};
-
-            if (sheet.Cells["AJ" + rowIndex.ToString()].Text !=null && specialNotes.Contains( sheet.Cells["AJ" + rowIndex.ToString()].Text.Trim()))
+            foreach(string sp in specialNotes)
             {
+                if (sheet.Cells["AJ" + rowIndex.ToString()].Text.Trim().Contains(sp))
+                {
+                    sheet.Cells["AJ" + rowIndex.ToString()].Value = sp;
+                    return;
+                }
+                    
 
-                return;
             }
+            
+           
 
-            else
-            {
+           
 
                 if (sheet.Cells["AJ" + rowIndex.ToString()].Value == null)
                     sheet.Cells["AJ" + rowIndex.ToString()].Value = "";
                 sheet.Cells["AJ" + rowIndex.ToString()].Value += Environment.NewLine + note;
-            }
+           
         }
         public static T Parse<T>(this object value)
         {
