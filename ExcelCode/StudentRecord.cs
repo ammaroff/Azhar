@@ -261,7 +261,7 @@ namespace ExcelCode
 
             //الكود التالي لا يعمل .. ولابد من الشرطين هذين حتى يتحقق أن الطالب راسب وليس بمنقول
             
-            if (!rows.FirstOrDefault().IsFinal && !string.IsNullOrWhiteSpace(StdState) && StdState.Contains("منقول بماد"))//طالب راسب
+            if (!rows.FirstOrDefault().IsFinal && !string.IsNullOrWhiteSpace(StdState) )//طالب راسب
             {
                 // احسب عدد مواد الرسوب
                 int failCount = rows.Count(i => i.subjectState == "Fail");
