@@ -77,15 +77,7 @@ namespace ExcelCode
                     string StdGrade = rows.First().StdGrade;
                     string oldStdGrade = rows.First().TotalGradeBefore;
 
-                    foreach (var row in rows)
-                    {
-
-                        //Console.WriteLine("IsFromLastYear {0} HelpDegOnSub {1}", row.IsFromLastYear, row.HelpDegOnSub);//, row.IsFromLastYear.GetType().Name, row.HelpDegOnSub.GetType().Name);
-                        record.Set(row);
-
-
-
-                    }
+                   
                     record.SetGroup(rows);
                     record.SetTotal(Isfinal, total, oldTotal);
                     record.SetGrade(Isfinal, StdGrade, oldStdGrade);

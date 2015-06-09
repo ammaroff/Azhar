@@ -27,7 +27,9 @@ namespace ExcelCode
                                         "فصل طالب",
                                         "عذر مرضي مقبول عن مواد الترم الثاني",
                                         "عذر مرضي مقبول عن مواد الترم الثاني",
-                                        "طالب ترك الدراسة"};
+                                        "طالب ترك الدراسة"
+                                        ,"غائب بدون عذر"};
+          
             foreach(string sp in specialNotes)
             {
                 if (sheet.Cells["AJ" + rowIndex.ToString()].Text.Trim().Contains(sp))
@@ -141,7 +143,7 @@ namespace ExcelCode
 
         }
 
-        public virtual void Set(dynamic row)
+        private void Set(dynamic row)
         {
 
 
@@ -199,15 +201,14 @@ namespace ExcelCode
             return string.Format("{0} درجة", degree);
 
         }
-
+        bool anyHelp = false;
 
         public virtual void SetGroup(IGrouping<dynamic, dynamic> rows)
         {
 
-            string stdState = rows.FirstOrDefault().StdState;
-
+            StdState = rows.FirstOrDefault().StdState;
             #region ملاحظات خاصة كالفصل والعذر وغيره
-            Sheet.AddNote(current,(string) rows.FirstOrDefault().specialnotes);
+            Sheet.AddNote(current, (string)rows.FirstOrDefault().specialnotes);
             #endregion
 
 
@@ -222,11 +223,45 @@ namespace ExcelCode
             }
             #endregion
 
+            foreach (var row in rows)
+            {
+
+                Set(row);
+            }
+
+            #region حالة الجبر
+            // في حالة الجبر في مادة أو مادتين: جبر بــ (عدد الدرجات) في(اسم المادة) لينجح بتقدير
+            //If row.HelpDegOnSubj > 0 ? "جبر بـ " + row.HelpDegOnSubj + " في " + row.SubjName + " " + row.SubjYName + " - "
+            //لو كان هناك مادة ثانية وثالثة يضافون بنفس الطريقة
+            //ثم تضاف في النهاية كلمة + "لينجح بتقدير"
+
+            foreach (var row in rows.Where(i => i.HelpDegOnSubj > 0 && i.SubjName != "القرآن الكريم" && i.subjectState == "Help"))
+            {
+                anyHelp = true;
+                //الجبر الذي يكتب في الملاحظات هو الجبر الذي فوق درجتين .. يمكن معرفة ذلك من خلال 
+                // subjectState = Help
+                //وهذا يصلح في كل المواد إلا مادة القرآن فلها حسبة خاصة ذكرتها لك
+                // أما الجبر الذي تكون حالة المادة معه
+                //subjectState =Auto
+                //فهذا لا يكتب في الملاحظات
+                anyHelp = true;
+                string LastYearSubjName = (SubjYName != row.SubjYName) ? row.SubjYName : "";
+                Sheet.AddNote(current, "جبر بـ{0}  في {1} {2}", strDegrees((int)row.HelpDegOnSubj), (string)row.SubjName, LastYearSubjName);
+
+            }
+
+
+            #endregion
+            if (anyHelp && !StdState.Contains("منقول"))
+                Sheet.AddNote(current, "لينجح بتقدير");
+
+
+
             #region الراسب
 
             //الكود التالي لا يعمل .. ولابد من الشرطين هذين حتى يتحقق أن الطالب راسب وليس بمنقول
             
-            if (!rows.FirstOrDefault().IsFinal && !string.IsNullOrWhiteSpace(stdState) && stdState.Contains("منقول بماد"))//طالب راسب
+            if (!rows.FirstOrDefault().IsFinal && !string.IsNullOrWhiteSpace(StdState) && StdState.Contains("منقول بماد"))//طالب راسب
             {
                 // احسب عدد مواد الرسوب
                 int failCount = rows.Count(i => i.subjectState == "Fail");
@@ -251,28 +286,7 @@ namespace ExcelCode
             }
             #endregion
 
-            #region حالة الجبر
-            // في حالة الجبر في مادة أو مادتين: جبر بــ (عدد الدرجات) في(اسم المادة) لينجح بتقدير
-            //If row.HelpDegOnSubj > 0 ? "جبر بـ " + row.HelpDegOnSubj + " في " + row.SubjName + " " + row.SubjYName + " - "
-            //لو كان هناك مادة ثانية وثالثة يضافون بنفس الطريقة
-            //ثم تضاف في النهاية كلمة + "لينجح بتقدير"
-            bool anyHelp = false;
-            foreach (var row in rows.Where(i => i.HelpDegOnSubj > 0 && i.SubjName != "القرآن الكريم" && i.subjectState=="Help"  ))
-            {
-                //الجبر الذي يكتب في الملاحظات هو الجبر الذي فوق درجتين .. يمكن معرفة ذلك من خلال 
-                // subjectState = Help
-                //وهذا يصلح في كل المواد إلا مادة القرآن فلها حسبة خاصة ذكرتها لك
-                // أما الجبر الذي تكون حالة المادة معه
-                //subjectState =Auto
-                //فهذا لا يكتب في الملاحظات
-                anyHelp = true;
-                string LastYearSubjName = (SubjYName != row.SubjYName) ? row.SubjYName : "";
-                Sheet.AddNote(current, "جبر بـ{0}  في {1} {2}", strDegrees((int)row.HelpDegOnSubj), (string)row.SubjName, LastYearSubjName);
-
-            }
-            if (anyHelp && !stdState.Contains("منقول")  )
-                Sheet.AddNote(current, "لينجح بتقدير");
-            #endregion
+           
 
             #region منقول بمواد
             /*
@@ -282,7 +296,7 @@ namespace ExcelCode
             //الكود المقترح للمادتين
             If row.StdStat == "منقول بمادتين" ? "منقول بمادتين "+ row.SubjName [that has] row.subjctState == "Fail" +" "+ row.SubjYName +" و" row.SubjName [that has] row.subjctState == "Fail" +" "+ row.SubjYName
             */
-            if (!string.IsNullOrWhiteSpace(stdState) && stdState.Contains("منقول بماد") && rows.Any(i => i.subjectState == "Fail") )
+            if (!string.IsNullOrWhiteSpace(StdState) && StdState.Contains("منقول بماد") && rows.Any(i => i.subjectState == "Fail") )
             {
 
                 var subjectsWithHelpFromFailArray = rows.Where(i => i.subjectState == "Fail").Select(i => (string)i.SubjName + " " + (((string)i.SubjYName) == this.SubjYName ? "" : ((string)i.SubjYName))).ToArray();
@@ -314,6 +328,8 @@ namespace ExcelCode
                 Sheet.AddNote(current, "منح {0} في المجموع الكلي ليصل للحد الأدنى للنجاح", (int)first.HalfMaxTotal - totalBefore);
             }
             #endregion
+
+            
 
 
 
@@ -362,6 +378,7 @@ namespace ExcelCode
                 }
                 if (oralDeg.Parse<float?>().HasValue && oralDeg.Parse<float?>() < 24 && oralDeg.Parse<float?>() > 18 && row.subjectState == "Help")
                 {
+                    anyHelp = true;
                     double help = 25 - oralDeg.Parse<double>();
                     string LastYearSubjName = (SubjYName != row.SubjYName) ? row.SubjYName : "";
                     Sheet.AddNote(current, "جبر بـ{0}  في شفوي القران الكريم {1}", strDegrees( help), LastYearSubjName);
@@ -411,12 +428,14 @@ namespace ExcelCode
             if (subjName == "القرآن الكريم" && row.subjectState != "Fail")
             {
 
+
                 if (writingDeg.Parse<float?>().HasValue && writingDeg.Parse<float?>() < 25)
                 {
                     Sheet.Cells[current + i, colIndex].WithStyle("HelpedSubjDegree").Value = writingDeg;
                 }
                 if (writingDeg.Parse<float?>().HasValue && writingDeg.Parse<float?>() < 24 && writingDeg.Parse<float?>() > 18)
                 {
+                    anyHelp = true;
                     float help = 25 - writingDeg.Parse<float>();
                     string LastYearSubjName = (SubjYName != row.SubjYName) ? row.SubjYName : "";
                     Sheet.AddNote(current, "جبر بـ{0}  في تحريري القران الكريم {1}", strDegrees( help), LastYearSubjName);
