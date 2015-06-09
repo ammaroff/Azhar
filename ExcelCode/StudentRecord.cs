@@ -17,14 +17,24 @@ namespace ExcelCode
         }
         public static void AddNote(this ExcelWorksheet sheet, int rowIndex, string note, params object[] p)
         {
+            if (note == null) return;
+
             note = string.Format(note, p);
             rowIndex = (((rowIndex - 5) / 8) * 8) + 5;
             sheet.Cells["AJ" + rowIndex.ToString()].Style.WrapText = true;
-            if (sheet.Cells["AJ" + rowIndex.ToString()].Text == Environment.NewLine + "غائب بدون عذر")
+            
+            string[] specialNotes = {"تحويل الي خارج الكلية",
+                                        "فصل طالب",
+                                        "عذر مرضي مقبول عن مواد الترم الثاني",
+                                        "عذر مرضي مقبول عن مواد الترم الثاني",
+                                        "طالب ترك الدراسة"};
+
+            if (sheet.Cells["AJ" + rowIndex.ToString()].Text !=null && specialNotes.Contains( sheet.Cells["AJ" + rowIndex.ToString()].Text.Trim()))
             {
 
                 return;
             }
+
             else
             {
 
@@ -190,6 +200,11 @@ namespace ExcelCode
         {
 
             string stdState = rows.FirstOrDefault().StdState;
+
+            #region ملاحظات خاصة كالفصل والعذر وغيره
+            Sheet.AddNote(current,(string) rows.FirstOrDefault().specialnotes);
+            #endregion
+
 
             #region الغائب
             if (rows
