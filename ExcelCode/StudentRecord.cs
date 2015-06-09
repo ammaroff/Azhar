@@ -251,7 +251,7 @@ namespace ExcelCode
 
             }
             if (anyHelp)
-                Sheet.AddNote(current, "لينجح بتقدير {0}", (string)rows.FirstOrDefault().StdGrade);
+                Sheet.AddNote(current, "لينجح بتقدير");
             #endregion
 
             #region منقول بمواد
