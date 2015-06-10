@@ -10,8 +10,8 @@ namespace ExcelCode
     public class Sh_1 : StudentRecord
 
     {
-        public Sh_1(ExcelWorkbook excel)
-              : base(excel)
+        public Sh_1()
+              : base("Sh_1.xlsx","RasdSh1.xlsx")
         { }
         public override int ClassId
         {

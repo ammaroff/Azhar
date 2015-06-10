@@ -9,8 +9,8 @@ namespace ExcelCode
 {
     public class Osol_2 : StudentRecord
     {
-        public Osol_2(ExcelWorkbook excel)
-            :base(excel)
+        public Osol_2()
+            :base("Osol_2.xlsx","RasdOs2.xlsx")
         {
 
             

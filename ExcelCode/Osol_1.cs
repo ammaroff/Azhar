@@ -9,8 +9,8 @@ namespace ExcelCode
 {
     public class Osol_1 : StudentRecord
     {
-        public Osol_1(ExcelWorkbook excel)
-             : base(excel)
+        public Osol_1()
+             : base("Osol_1.xlsx","RasdOs1.xlsx")
         {
 
          

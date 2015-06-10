@@ -11,8 +11,8 @@ namespace ExcelCode
        
     {
        
-        public Sh_2(ExcelWorkbook excel)
-              : base(excel)
+        public Sh_2()
+              : base("Sh_2.xlsx","RasdSh2.xlsx")
         { }
         public override int ClassId
         {

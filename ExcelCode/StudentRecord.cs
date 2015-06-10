@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using OfficeOpenXml;
@@ -24,7 +25,7 @@ namespace ExcelCode
             sheet.Cells["AJ" + rowIndex.ToString()].Style.WrapText = true;
             
             string[] specialNotes = {"تحويل الي خارج الكلية",
-                                        "فصل طالب",
+                                       // "فصل طالب",
                                         "عذر مرضي مقبول عن مواد الترم الثاني",
                                         "عذر مرضي مقبول عن مواد الترم الثاني",
                                         "طالب ترك الدراسة"
@@ -58,26 +59,68 @@ namespace ExcelCode
     }
     public class StudentRecord
     {
+        public ExcelPackage ExcelPackage { get; set; }
+
+        internal void SetNewRasdStudent()
+        {
+            currentRasd++;
+            RasdSheet.Cells[currentRasd, 1].Value = SeatNo;
+            RasdSheet.Cells[currentRasd, 2].Value = StudentName;
+            RasdSheet.Cells[currentRasd, 28].Value = TotalDeg;
+            
+
+        }
+
+        public ExcelPackage RasdExcelPackage { get; set; }
+
+        public ExcelWorksheet RasdSheet { get; set; }
         // public string SubjectName { get; set; }
         public string Irregular { get; set; }
         public int SheetNumber { get; set; }
+
+        internal void SetRasdGroup(IGrouping<dynamic, dynamic> rows)
+        {
+            foreach (var row in rows)
+            {
+
+                SetRasd(row);
+            }
+
+        }
+
+        private void SetRasd(dynamic row)
+        {
+            
+            string subjName = row.SubjName;
+            var subject = RasdSheet.Cells["C1:BA"].FirstOrDefault(cell => cell.Text == subjName);
+            if (subject != null)
+            {
+                int colIndex = subject.Start.Column;
+
+                RasdSheet.Cells[currentRasd, colIndex].Value = row.LastGrade;
+            }
+
+        }
+
         public virtual string SubjYName { get { return ""; } }
-        public StudentRecord(ExcelWorkbook excel)
+        public StudentRecord(string templateFilePath,string rasdTemplate)
         {
+            FileInfo file = new FileInfo("Templates\\"+templateFilePath);
+            ExcelPackage = new ExcelPackage(file);
 
-            SheetNumber = 0;
-            Sheet = excel.Worksheets.ElementAtOrDefault(SheetNumber);
+            FileInfo rasdfile = new FileInfo("Templates\\" + rasdTemplate);
+            RasdExcelPackage = new ExcelPackage(rasdfile);
+            Console.WriteLine("Openning " + file.Name + " file template");
+            Sheet = ExcelPackage.Workbook.Worksheets.FirstOrDefault();
+            RasdSheet = RasdExcelPackage.Workbook.Worksheets.FirstOrDefault();
         }
-        public StudentRecord(string seatNo, string studentName, string irregular, string recStatus, int secretNo, string stdState)
+
+        internal void Save()
         {
-            SeatNo = seatNo; StudentName = studentName; Irregular = irregular; RecordStatus = recStatus; SecretNo = secretNo; StdState = stdState;
-
+            ExcelPackage.SaveAs(new FileInfo("out\\"+ExcelPackage.File.Name));
+            RasdExcelPackage.SaveAs(new FileInfo("out\\" + RasdExcelPackage.File.Name));
         }
-        public StudentRecord(int sheetNumber, string seatNo, string studentName, string recStatus, int secretNo)
-        {
-            SheetNumber = sheetNumber; SeatNo = seatNo; StudentName = studentName; RecordStatus = recStatus; SecretNo = secretNo;
 
-        }
         public string SeatNo { get; set; }
         public string RecordStatus { get; set; }
         public string StdState { get; set; }
@@ -87,9 +130,12 @@ namespace ExcelCode
         public string StudentName { get; set; }
         public virtual int ClassId { get { return 0; } }
 
+        public string TotalDeg { get; internal set; }
+
         public const int inc = 8;
         public const int start = 5;
         public int current = start;
+        private int currentRasd =1;
         public int lastYearIndex = 25;
 
 
@@ -143,6 +189,7 @@ namespace ExcelCode
 
         }
 
+        
         private void Set(dynamic row)
         {
 
@@ -202,6 +249,7 @@ namespace ExcelCode
 
         }
         bool anyHelp = false;
+        
 
         public virtual void SetGroup(IGrouping<dynamic, dynamic> rows)
         {
