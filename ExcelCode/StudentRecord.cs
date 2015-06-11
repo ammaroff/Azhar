@@ -249,7 +249,8 @@ namespace ExcelCode
 
         }
         bool anyHelp = false;
-        
+        int helpCount = 0;
+
 
         public virtual void SetGroup(IGrouping<dynamic, dynamic> rows)
         {
@@ -283,9 +284,11 @@ namespace ExcelCode
             //لو كان هناك مادة ثانية وثالثة يضافون بنفس الطريقة
             //ثم تضاف في النهاية كلمة + "لينجح بتقدير"
 
+            
             foreach (var row in rows.Where(i => i.HelpDegOnSubj > 0 && i.SubjName != "القرآن الكريم" && i.subjectState == "Help"))
             {
                 anyHelp = true;
+                helpCount++;
                 //الجبر الذي يكتب في الملاحظات هو الجبر الذي فوق درجتين .. يمكن معرفة ذلك من خلال 
                 // subjectState = Help
                 //وهذا يصلح في كل المواد إلا مادة القرآن فلها حسبة خاصة ذكرتها لك
@@ -300,8 +303,14 @@ namespace ExcelCode
 
 
             #endregion
-            if (anyHelp && !StdState.Contains("منقول"))
-                Sheet.AddNote(current, "لينجح بتقدير");
+            if (anyHelp)
+            {
+                if(StdState.Contains("منقول"))
+                {
+                    Sheet.AddNote(current, "لينقل بـ ", helpCount == 2 ? "مادتين" : "مادة واحدة");
+                }
+            }
+                
 
 
 
@@ -427,6 +436,7 @@ namespace ExcelCode
                 if (oralDeg.Parse<float?>().HasValue && oralDeg.Parse<float?>() < 24 && oralDeg.Parse<float?>() > 18 && row.subjectState == "Help")
                 {
                     anyHelp = true;
+                    helpCount++;
                     double help = 25 - oralDeg.Parse<double>();
                     string LastYearSubjName = (SubjYName != row.SubjYName) ? row.SubjYName : "";
                     Sheet.AddNote(current, "جبر بـ{0}  في شفوي القران الكريم {1}", strDegrees( help), LastYearSubjName);

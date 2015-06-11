@@ -5,8 +5,6 @@ VisualStudioVersion = 14.0.22823.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelCode", "ExcelCode\ExcelCode.csproj", "{1C8EA1F5-425E-45E3-BABD-0EE77D7F529E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GradesOnly", "GradesOnly\GradesOnly.csproj", "{B648C98C-7347-448D-891F-59D3A63A06A2}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,10 +15,6 @@ Global
 		{1C8EA1F5-425E-45E3-BABD-0EE77D7F529E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1C8EA1F5-425E-45E3-BABD-0EE77D7F529E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1C8EA1F5-425E-45E3-BABD-0EE77D7F529E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B648C98C-7347-448D-891F-59D3A63A06A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B648C98C-7347-448D-891F-59D3A63A06A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B648C98C-7347-448D-891F-59D3A63A06A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B648C98C-7347-448D-891F-59D3A63A06A2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
