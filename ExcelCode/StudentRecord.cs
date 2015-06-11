@@ -249,7 +249,7 @@ namespace ExcelCode
 
         }
         bool anyHelp = false;
-        int helpCount = 0;
+        int helpCount =0;
 
 
         public virtual void SetGroup(IGrouping<dynamic, dynamic> rows)
@@ -284,9 +284,9 @@ namespace ExcelCode
             //لو كان هناك مادة ثانية وثالثة يضافون بنفس الطريقة
             //ثم تضاف في النهاية كلمة + "لينجح بتقدير"
 
-            
             foreach (var row in rows.Where(i => i.HelpDegOnSubj > 0 && i.SubjName != "القرآن الكريم" && i.subjectState == "Help"))
             {
+
                 anyHelp = true;
                 helpCount++;
                 //الجبر الذي يكتب في الملاحظات هو الجبر الذي فوق درجتين .. يمكن معرفة ذلك من خلال 
@@ -303,21 +303,24 @@ namespace ExcelCode
 
 
             #endregion
+
             if (anyHelp)
             {
-                if(StdState.Contains("منقول"))
+                if (StdState.Contains("منقول"))
                 {
-                    Sheet.AddNote(current, "لينقل بـ ", helpCount == 2 ? "مادتين" : "مادة واحدة");
+                   // Sheet.AddNote(current, "لينقل بـ",helpCount==2?"مادتين":"مادة واحدة");
                 }
+                else
+                    Sheet.AddNote(current, "لينجح بتقدير");
             }
-                
+               
 
 
 
             #region الراسب
 
             //الكود التالي لا يعمل .. ولابد من الشرطين هذين حتى يتحقق أن الطالب راسب وليس بمنقول
-            
+
             if (!rows.FirstOrDefault().IsFinal && !string.IsNullOrWhiteSpace(StdState) )//طالب راسب
             {
                 // احسب عدد مواد الرسوب
@@ -358,7 +361,9 @@ namespace ExcelCode
 
                 var subjectsWithHelpFromFailArray = rows.Where(i => i.subjectState == "Fail").Select(i => (string)i.SubjName + " " + (((string)i.SubjYName) == this.SubjYName ? "" : ((string)i.SubjYName))).ToArray();
                 var subjectsWithHelpFromFail = string.Join(" و", subjectsWithHelpFromFailArray);
-                Sheet.AddNote(current, (string)rows.FirstOrDefault().StdState + " " + subjectsWithHelpFromFail);
+                // Sheet.AddNote(current, (string)rows.FirstOrDefault().StdState + " " + subjectsWithHelpFromFail);
+
+                Sheet.AddNote(current, "لينقل بـ " + subjectsWithHelpFromFail);
 
             }
 
@@ -494,6 +499,7 @@ namespace ExcelCode
                 if (writingDeg.Parse<float?>().HasValue && writingDeg.Parse<float?>() < 24 && writingDeg.Parse<float?>() > 18)
                 {
                     anyHelp = true;
+                    helpCount++;
                     float help = 25 - writingDeg.Parse<float>();
                     string LastYearSubjName = (SubjYName != row.SubjYName) ? row.SubjYName : "";
                     Sheet.AddNote(current, "جبر بـ{0}  في تحريري القران الكريم {1}", strDegrees( help), LastYearSubjName);
