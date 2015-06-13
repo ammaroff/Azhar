@@ -274,12 +274,12 @@ namespace ExcelCode
 
             StdState = rows.FirstOrDefault().StdState;
             MaxTotal = rows.FirstOrDefault().HalfMaxTotal * 2;
-            TotalHelpDegrees = rows.Where(i=>i.HelpDegOnSubj > 0).Sum(i => (double)i.HelpDegOnSubj);
-            double maxHelpDeg = rows.Max(i => (double)i.HelpDegOnSubj);
-            double maxHelpDegQuran = rows.Where(i=>i.SubjName == "القرآن الكريم").Max(i=>(double)i.HelpDegOnSubj);
+            TotalHelpDegrees = rows.Where(i=>i.HelpDegOnSubj > 0 && i.subjectState == "Help").Sum(i => (double)i.HelpDegOnSubj);
+            bool maxHelpDeg = rows.Any(i=>i.subjectState == "Help" && i.HelpDegOnSubj > 10);
+            bool maxHelpDegQuran = rows.Any(i=>i.SubjName == "القرآن الكريم" &&  i.subjectState == "Help" && i.HelpDegOnSubj >=6);
             
 
-            SavedFromKick = (TotalHelpDegrees > ExtremeHelpPercent  || maxHelpDeg>10 || maxHelpDegQuran >=6);
+            SavedFromKick = (TotalHelpDegrees > ExtremeHelpPercent  || maxHelpDeg || maxHelpDegQuran );
 
 
 
@@ -383,7 +383,10 @@ namespace ExcelCode
 
                 var subjectsWithHelpFromFailArray = rows.Where(i => i.subjectState == "Fail").Select(i => (string)i.SubjName + " " + (((string)i.SubjYName) == this.SubjYName ? "" : ((string)i.SubjYName))).ToArray();
                 var subjectsWithHelpFromFail = string.Join(" و", subjectsWithHelpFromFailArray);
-                Sheet.AddNote(current, (string)rows.FirstOrDefault().StdState + " " + subjectsWithHelpFromFail);
+                if(anyHelp)
+                    Sheet.AddNote(current, "لينقل بـ" + subjectsWithHelpFromFail);
+                else
+                    Sheet.AddNote(current, (string)rows.FirstOrDefault().StdState + " " + subjectsWithHelpFromFail);
                 //Sheet.AddNote(current, "لينقل بـ " + subjectsWithHelpFromFail);
                 int maxStayId = rows.FirstOrDefault().MaxStayId;
                 if (new int[] { 2, 6, 11 }.Contains(maxStayId)  && SavedFromKick/* && هنا يكتب شرط آخر وهو شرط أن يكون الطالب قد حصل على درجة رأفة أكثر من 10 في مادة واحدة أو أكثر من 1% من المجموع الكلي .. ويمكن الاستدلال على المجموع الكلي من
