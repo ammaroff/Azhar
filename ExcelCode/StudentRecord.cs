@@ -160,6 +160,7 @@ namespace ExcelCode
             if(!HasOutNotes)
                 Sheet.Cells[current, 31].Value = StdState;
             lastYearIndex = 25;
+            HasOutNotes = false;
         }
         public virtual void SetTotal(int Isfinal, string total, string oldTotal)
         {
