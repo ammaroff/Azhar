@@ -23,33 +23,33 @@ namespace ExcelCode
             note = string.Format(note, p);
             rowIndex = (((rowIndex - 5) / 8) * 8) + 5;
             sheet.Cells["AJ" + rowIndex.ToString()].Style.WrapText = true;
-            
+
             string[] specialNotes = {"تحويل الي خارج الكلية",
-                                       // "فصل طالب",
-                                        "عذر مرضي مقبول عن مواد الترم الثاني",
+                // "فصل طالب",
+                "عذر مرضي مقبول عن مواد الترم الثاني",
                                         "عذر مرضي مقبول عن مواد الترم الثاني",
                                         "طالب ترك الدراسة"
                                         ,"غائب بدون عذر"};
-          
-            foreach(string sp in specialNotes)
+
+            foreach (string sp in specialNotes)
             {
                 if (sheet.Cells["AJ" + rowIndex.ToString()].Text.Trim().Contains(sp))
                 {
                     sheet.Cells["AJ" + rowIndex.ToString()].Value = sp;
                     return;
                 }
-                    
+
 
             }
-            
-           
 
-           
 
-                if (sheet.Cells["AJ" + rowIndex.ToString()].Value == null)
-                    sheet.Cells["AJ" + rowIndex.ToString()].Value = "";
-                sheet.Cells["AJ" + rowIndex.ToString()].Value += Environment.NewLine + note;
-           
+
+
+
+            if (sheet.Cells["AJ" + rowIndex.ToString()].Value == null)
+                sheet.Cells["AJ" + rowIndex.ToString()].Value = "";
+            sheet.Cells["AJ" + rowIndex.ToString()].Value += Environment.NewLine + note;
+
         }
         public static T Parse<T>(this object value)
         {
@@ -66,8 +66,13 @@ namespace ExcelCode
             currentRasd++;
             RasdSheet.Cells[currentRasd, 1].Value = SeatNo;
             RasdSheet.Cells[currentRasd, 2].Value = StudentName;
-            RasdSheet.Cells[currentRasd, 28].Value = TotalDeg;
-            
+            RasdSheet.Cells[currentRasd, 37].Value = Mazhab;// المذهب
+            RasdSheet.Cells[currentRasd, 38].Value = Irregular + " / " + RecordStatus;
+            if (StdState == "ناجح")
+            {
+                RasdSheet.Cells[currentRasd, 28].Value = TotalDeg.Parse<float>();
+            }
+
 
         }
 
@@ -76,7 +81,17 @@ namespace ExcelCode
         public ExcelWorksheet RasdSheet { get; set; }
         // public string SubjectName { get; set; }
         public string Irregular { get; set; }
+        public string Mazhab { get; set; }
         public int SheetNumber { get; set; }
+
+        public int MaxTotal { get; set; }
+
+        public float ExtremeHelpPercent {
+            get
+            {
+                return MaxTotal / 100;
+            }
+        }
 
         internal void SetRasdGroup(IGrouping<dynamic, dynamic> rows)
         {
@@ -90,9 +105,9 @@ namespace ExcelCode
 
         private void SetRasd(dynamic row)
         {
-            
+
             string subjName = row.SubjName;
-            var subject = RasdSheet.Cells["C1:BA"].FirstOrDefault(cell => cell.Text == subjName);
+            var subject = RasdSheet.Cells["C1:T1"].FirstOrDefault(cell => cell.Text == subjName);
             if (subject != null)
             {
                 int colIndex = subject.Start.Column;
@@ -103,9 +118,9 @@ namespace ExcelCode
         }
 
         public virtual string SubjYName { get { return ""; } }
-        public StudentRecord(string templateFilePath,string rasdTemplate)
+        public StudentRecord(string templateFilePath, string rasdTemplate)
         {
-            FileInfo file = new FileInfo("Templates\\"+templateFilePath);
+            FileInfo file = new FileInfo("Templates\\" + templateFilePath);
             ExcelPackage = new ExcelPackage(file);
 
             FileInfo rasdfile = new FileInfo("Templates\\" + rasdTemplate);
@@ -117,7 +132,7 @@ namespace ExcelCode
 
         internal void Save()
         {
-            ExcelPackage.SaveAs(new FileInfo("out\\"+ExcelPackage.File.Name));
+            ExcelPackage.SaveAs(new FileInfo("out\\" + ExcelPackage.File.Name));
             RasdExcelPackage.SaveAs(new FileInfo("out\\" + RasdExcelPackage.File.Name));
         }
 
@@ -125,6 +140,9 @@ namespace ExcelCode
         public string RecordStatus { get; set; }
         public string StdState { get; set; }
         public int SecretNo { get; set; }
+        public double TotalHelpDegrees { get; set; }
+
+        public bool SavedFromKick { get; set; }
         protected ExcelWorksheet Sheet { get; set; }
 
         public string StudentName { get; set; }
@@ -135,7 +153,7 @@ namespace ExcelCode
         public const int inc = 8;
         public const int start = 5;
         public int current = start;
-        private int currentRasd =1;
+        private int currentRasd = 1;
         public int lastYearIndex = 25;
 
 
@@ -189,7 +207,7 @@ namespace ExcelCode
 
         }
 
-        
+
         private void Set(dynamic row)
         {
 
@@ -229,7 +247,6 @@ namespace ExcelCode
 
                 #endregion
                 return;
-
             }
             int colIndex = subject.Start.Column;
 
@@ -244,22 +261,31 @@ namespace ExcelCode
             if (degree == 2)
                 return "درجتين";
             if (degree < 11)
-                return string.Format("{0} درجات",degree);
+                return string.Format("{0} درجات", degree);
             return string.Format("{0} درجة", degree);
 
         }
         bool anyHelp = false;
-        int helpCount =0;
+        int helpCount = 0;
 
 
         public virtual void SetGroup(IGrouping<dynamic, dynamic> rows)
         {
 
             StdState = rows.FirstOrDefault().StdState;
+            MaxTotal = rows.FirstOrDefault().HalfMaxTotal * 2;
+            TotalHelpDegrees = rows.Where(i=>i.HelpDegOnSubj > 0).Sum(i => (double)i.HelpDegOnSubj);
+            double maxHelpDeg = rows.Max(i => (double)i.HelpDegOnSubj);
+            double maxHelpDegQuran = rows.Where(i=>i.SubjName == "القرآن الكريم").Max(i=>(double)i.HelpDegOnSubj);
+            
+
+            SavedFromKick = (TotalHelpDegrees > ExtremeHelpPercent  || maxHelpDeg>10 || maxHelpDegQuran >=6);
+
+
+
             #region ملاحظات خاصة كالفصل والعذر وغيره
             Sheet.AddNote(current, (string)rows.FirstOrDefault().specialnotes);
             #endregion
-
 
             #region الغائب
             if (rows
@@ -302,33 +328,31 @@ namespace ExcelCode
             }
 
 
-            #endregion
 
+            //      if (anyHelp && !StdState.Contains("منقول"))
             if (anyHelp)
             {
                 if (StdState.Contains("منقول"))
                 {
-                   // Sheet.AddNote(current, "لينقل بـ",helpCount==2?"مادتين":"مادة واحدة");
+                    // Sheet.AddNote(current, "لينقل بـ",helpCount==2?"مادتين":"مادة واحدة");
                 }
                 else
                     Sheet.AddNote(current, "لينجح بتقدير");
             }
-               
-
-
+            #endregion
 
             #region الراسب
 
             //الكود التالي لا يعمل .. ولابد من الشرطين هذين حتى يتحقق أن الطالب راسب وليس بمنقول
 
-            if (!rows.FirstOrDefault().IsFinal && !string.IsNullOrWhiteSpace(StdState) )//طالب راسب
+            if (!rows.FirstOrDefault().IsFinal && !string.IsNullOrWhiteSpace(StdState) && StdState.Contains("راسب")/*أضفت هذا الشرط لأن الطالب الراسب والمعرض للفصل ينبغي أن لا يكون منقولا*/)//طالب راسب
             {
                 // احسب عدد مواد الرسوب
                 int failCount = rows.Count(i => i.subjectState == "Fail");
                 int maxStayId = rows.FirstOrDefault().MaxStayId;
                 if (new int[] { 2, 6, 11 }.Contains(maxStayId))
                 {
-                    Sheet.Cells[current, 31].Value = "راسب وينظر في فصله ";
+                    Sheet.Cells[current, 31].Value = "راسب وينظر في فصله";
                 }
 
                 //    if (failCount == 1)
@@ -346,8 +370,6 @@ namespace ExcelCode
             }
             #endregion
 
-           
-
             #region منقول بمواد
             /*
             //في حالة النقل بمادة أو مادتين بدون جبر
@@ -356,14 +378,20 @@ namespace ExcelCode
             //الكود المقترح للمادتين
             If row.StdStat == "منقول بمادتين" ? "منقول بمادتين "+ row.SubjName [that has] row.subjctState == "Fail" +" "+ row.SubjYName +" و" row.SubjName [that has] row.subjctState == "Fail" +" "+ row.SubjYName
             */
-            if (!string.IsNullOrWhiteSpace(StdState) && StdState.Contains("منقول بماد") && rows.Any(i => i.subjectState == "Fail") )
+            if (!string.IsNullOrWhiteSpace(StdState) && StdState.Contains("منقول بماد") && rows.Any(i => i.subjectState == "Fail"))
             {
 
                 var subjectsWithHelpFromFailArray = rows.Where(i => i.subjectState == "Fail").Select(i => (string)i.SubjName + " " + (((string)i.SubjYName) == this.SubjYName ? "" : ((string)i.SubjYName))).ToArray();
                 var subjectsWithHelpFromFail = string.Join(" و", subjectsWithHelpFromFailArray);
-                // Sheet.AddNote(current, (string)rows.FirstOrDefault().StdState + " " + subjectsWithHelpFromFail);
-
-                Sheet.AddNote(current, "لينقل بـ " + subjectsWithHelpFromFail);
+                Sheet.AddNote(current, (string)rows.FirstOrDefault().StdState + " " + subjectsWithHelpFromFail);
+                //Sheet.AddNote(current, "لينقل بـ " + subjectsWithHelpFromFail);
+                int maxStayId = rows.FirstOrDefault().MaxStayId;
+                if (new int[] { 2, 6, 11 }.Contains(maxStayId)  && SavedFromKick/* && هنا يكتب شرط آخر وهو شرط أن يكون الطالب قد حصل على درجة رأفة أكثر من 10 في مادة واحدة أو أكثر من 1% من المجموع الكلي .. ويمكن الاستدلال على المجموع الكلي من
+                                                                * HalfMaxTotal*/)
+                {
+                    Sheet.AddNote(current, "لينجو من الفصل");
+                }
+               
 
             }
 
@@ -390,16 +418,11 @@ namespace ExcelCode
                 Sheet.AddNote(current, "منح {0} في المجموع الكلي ليصل للحد الأدنى للنجاح", (int)first.HalfMaxTotal - totalBefore);
             }
             #endregion
-
-            
-
-
-
-
-
         }
         private void SetDegrees(int subjId, string subjName, dynamic row, int i, int colIndex)
         {
+            string oralDeg = row.OralDeg;
+            string writingDeg = row.WriringDeg;
             #region الخانة الأولى شفوي
             //الخانة الأولى شفوي بدون جبر
             //
@@ -407,7 +430,7 @@ namespace ExcelCode
 
             if (subjName == "القرآن الكريم" && row.subjectState != "Fail")
             {
-                string oralDeg = row.OralDeg;
+                
                 if (oralDeg.Parse<float?>().HasValue && oralDeg.Parse<float?>() < 25)
                 {
                     Sheet.Cells[current + i, colIndex].Value = 25;
@@ -426,14 +449,12 @@ namespace ExcelCode
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////
             #endregion
-
-
             #region الخانة الثانية .. شفوي جبر القرآن
             //الخانة الثانية
             i++;
             if (subjName == "القرآن الكريم" && row.subjectState != "Fail")
             {
-                string oralDeg = row.OralDeg;
+                
                 if (oralDeg.Parse<float?>().HasValue && oralDeg.Parse<float?>() < 25)
                 {
                     Sheet.Cells[current + i, colIndex].WithStyle("HelpedSubjDegree").Value = row.OralDeg;
@@ -444,7 +465,7 @@ namespace ExcelCode
                     helpCount++;
                     double help = 25 - oralDeg.Parse<double>();
                     string LastYearSubjName = (SubjYName != row.SubjYName) ? row.SubjYName : "";
-                    Sheet.AddNote(current, "جبر بـ{0}  في شفوي القران الكريم {1}", strDegrees( help), LastYearSubjName);
+                    Sheet.AddNote(current, "جبر بـ{0}  في شفوي القران الكريم {1}", strDegrees(help), LastYearSubjName);
                 }
 
 
@@ -457,12 +478,11 @@ namespace ExcelCode
             ///////////////////////////////////////////////////////////////////////////////////////////////////
             #endregion
 
-
             #region الخانة الثالثة تحريري
             //الخانة الثالثة تحريري بدون جبر
             //
             i++;
-            string writingDeg = row.WriringDeg;
+      
             if (subjName == "القرآن الكريم" && row.subjectState != "Fail")
             {
 
@@ -482,8 +502,6 @@ namespace ExcelCode
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////
             #endregion
-
-
             #region الخانة الرابعة تحريري جبر القرآن
             //الخانة الرابعة تحريري الجبر
             //
@@ -502,7 +520,7 @@ namespace ExcelCode
                     helpCount++;
                     float help = 25 - writingDeg.Parse<float>();
                     string LastYearSubjName = (SubjYName != row.SubjYName) ? row.SubjYName : "";
-                    Sheet.AddNote(current, "جبر بـ{0}  في تحريري القران الكريم {1}", strDegrees( help), LastYearSubjName);
+                    Sheet.AddNote(current, "جبر بـ{0}  في تحريري القران الكريم {1}", strDegrees(help), LastYearSubjName);
                 }
 
 
@@ -573,7 +591,6 @@ namespace ExcelCode
 
 
             #endregion
-
             #region الخانة السادسة .. المجموع الأصلي
 
             //
@@ -620,6 +637,7 @@ namespace ExcelCode
 
 
             #endregion
+
             #region الخانة السابعة .. التقدير النهائي
 
             //
@@ -647,13 +665,12 @@ namespace ExcelCode
             ////////////////////////////////////////////////////////////////////////////////////////////////////
 
             #endregion
-
             #region الخانة الثامنة .. التقدير الأصلي
 
             //
             i++;
             //إرغامه على رصد تقدير مادة القرآن ضعيف إذا اكتشف أنه مجبور فيها ومجموعها فوق 50 لأن الداتبابيز لا تخفض التقدير
-            if (subjName == "القرآن الكريم" && row.subjectState != "Fail" && (Convert.ToInt32(row.OralDeg) < 25 || Convert.ToInt32(row.WriringDeg) < 25))
+            if (subjName == "القرآن الكريم" && row.subjectState != "Fail" && (oralDeg.Parse<float?>() < 25 || writingDeg.Parse<float?>() < 25))
             {
                 Sheet.Cells[current + i, colIndex].WithStyle("HelpedSubjGrade").Value = "ض";
             }
@@ -676,7 +693,7 @@ namespace ExcelCode
 
             #endregion
 
-            i++;
+           
         }
 
 

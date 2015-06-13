@@ -42,9 +42,9 @@ namespace ExcelCode
         private static void Fill_Student_Data(Type type)
         {
 
-            
 
-           
+
+
 
             var record = (StudentRecord)Activator.CreateInstance(type);
             Console.WriteLine("create excel file");
@@ -67,6 +67,7 @@ namespace ExcelCode
                 record.SecretNo = rows.First().SecrtNum;
                 record.StdState = rows.First().StdState;
                 record.TotalDeg = rows.First().TotalDeg;
+                record.Mazhab = rows.First().Mazhab;
                 record.SetStudet(i++);
                 record.SetNewRasdStudent();
 
@@ -74,6 +75,7 @@ namespace ExcelCode
 
                 string total = rows.First().TotalDeg;
                 string oldTotal = rows.First().TotalBefore;
+                string Mazhab = rows.First().Mazhab;
                 int Isfinal = Convert.ToInt32(rows.First().IsFinal);
                 string StdGrade = rows.First().StdGrade;
                 string oldStdGrade = rows.First().TotalGradeBefore;
