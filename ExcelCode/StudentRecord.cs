@@ -16,6 +16,7 @@ namespace ExcelCode
             cells.StyleName = styleName;
             return cells;
         }
+      
         public static void AddNote(this ExcelWorksheet sheet, int rowIndex, string note, params object[] p)
         {
             if (note == null) return;
@@ -23,32 +24,23 @@ namespace ExcelCode
             note = string.Format(note, p);
             rowIndex = (((rowIndex - 5) / 8) * 8) + 5;
             sheet.Cells["AJ" + rowIndex.ToString()].Style.WrapText = true;
-
-            string[] specialNotes = {"تحويل الي خارج الكلية",
-                // "فصل طالب",
-                "عذر مرضي مقبول عن مواد الترم الثاني",
-                                        "عذر مرضي مقبول عن مواد الترم الثاني",
-                                        "طالب ترك الدراسة"
-                                        ,"غائب بدون عذر"};
-
-            foreach (string sp in specialNotes)
-            {
-                if (sheet.Cells["AJ" + rowIndex.ToString()].Text.Trim().Contains(sp))
-                {
-                    sheet.Cells["AJ" + rowIndex.ToString()].Value = sp;
-                    return;
-                }
-
-
-            }
-
-
-
-
+            
 
             if (sheet.Cells["AJ" + rowIndex.ToString()].Value == null)
                 sheet.Cells["AJ" + rowIndex.ToString()].Value = "";
             sheet.Cells["AJ" + rowIndex.ToString()].Value += Environment.NewLine + note;
+
+        }
+        public static void AddExclusiveNote(this ExcelWorksheet sheet, int rowIndex, string note, params object[] p)
+        {
+            
+            if (note == null) return;
+
+            note = string.Format(note, p);
+            rowIndex = (((rowIndex - 5) / 8) * 8) + 5;
+            sheet.Cells["AJ" + rowIndex.ToString()].Style.WrapText = true;
+
+            sheet.Cells["AJ" + rowIndex.ToString()].Value =  note;
 
         }
         public static T Parse<T>(this object value)
@@ -155,7 +147,7 @@ namespace ExcelCode
         public int current = start;
         private int currentRasd = 1;
         public int lastYearIndex = 25;
-
+         bool HasOutNotes = false;
 
         public virtual void SetStudet(int index)
         {
@@ -165,12 +157,13 @@ namespace ExcelCode
             Sheet.Cells[current, 3].Value = Irregular;
             Sheet.Cells[current, 4].Value = RecordStatus;
             Sheet.Cells[current, 5].Value = SecretNo;
-            Sheet.Cells[current, 31].Value = StdState;
+            if(!HasOutNotes)
+                Sheet.Cells[current, 31].Value = StdState;
             lastYearIndex = 25;
         }
         public virtual void SetTotal(int Isfinal, string total, string oldTotal)
         {
-            if (Isfinal == 1)
+            if (Isfinal == 1 && !HasOutNotes)
             {
                 if (total == oldTotal)
                 {
@@ -190,7 +183,7 @@ namespace ExcelCode
         public virtual void SetGrade(int Isfinal, string StdGrade, string oldStdGrade)
         {
 
-            if (Isfinal == 1)
+            if (Isfinal == 1 && !HasOutNotes)
             {
 
                 if (StdGrade == oldStdGrade)
@@ -277,6 +270,13 @@ namespace ExcelCode
             TotalHelpDegrees = rows.Where(i=>i.HelpDegOnSubj > 0 && i.subjectState == "Help").Sum(i => (double)i.HelpDegOnSubj);
             bool maxHelpDeg = rows.Any(i=>i.subjectState == "Help" && i.HelpDegOnSubj > 10);
             bool maxHelpDegQuran = rows.Any(i=>i.SubjName == "القرآن الكريم" &&  i.subjectState == "Help" && i.HelpDegOnSubj >=6);
+
+            if(rows.Any(i=>i.OutNotes != null) )
+            {
+                
+                Sheet.AddExclusiveNote(current, (string)rows.FirstOrDefault().OutNotes);
+                HasOutNotes = true;
+            }
             
 
             SavedFromKick = (TotalHelpDegrees > ExtremeHelpPercent  || maxHelpDeg || maxHelpDegQuran );
@@ -284,13 +284,18 @@ namespace ExcelCode
 
 
             #region ملاحظات خاصة كالفصل والعذر وغيره
-            Sheet.AddNote(current, (string)rows.FirstOrDefault().specialnotes);
+            if (!HasOutNotes)
+            {
+                Sheet.AddNote(current, (string)rows.FirstOrDefault().RevNotes);
+                Sheet.AddNote(current, (string)rows.FirstOrDefault().Bunchments);
+            }
             #endregion
 
             #region الغائب
+            
             if (rows
                 .Where(i => !i.IsFromLastYear)
-                .All(i => i.Grade == "غ"))
+                .All(i => i.Grade == "غ") && !HasOutNotes)
             {
                 Sheet.Cells[current, 31].Value = "غائب ";
                 Sheet.AddNote(current, "غائب بدون عذر");
@@ -323,14 +328,15 @@ namespace ExcelCode
                 //فهذا لا يكتب في الملاحظات
                 anyHelp = true;
                 string LastYearSubjName = (SubjYName != row.SubjYName) ? row.SubjYName : "";
-                Sheet.AddNote(current, "جبر بـ{0}  في {1} {2}", strDegrees((int)row.HelpDegOnSubj), (string)row.SubjName, LastYearSubjName);
+                if(!HasOutNotes)
+                    Sheet.AddNote(current, "جبر بـ{0}  في {1} {2}", strDegrees((int)row.HelpDegOnSubj), (string)row.SubjName, LastYearSubjName);
 
             }
 
 
 
             //      if (anyHelp && !StdState.Contains("منقول"))
-            if (anyHelp)
+            if (anyHelp && !HasOutNotes)
             {
                 if (StdState.Contains("منقول"))
                 {
@@ -350,7 +356,7 @@ namespace ExcelCode
                 // احسب عدد مواد الرسوب
                 int failCount = rows.Count(i => i.subjectState == "Fail");
                 int maxStayId = rows.FirstOrDefault().MaxStayId;
-                if (new int[] { 2, 6, 11 }.Contains(maxStayId))
+                if (new int[] { 2, 6, 11 }.Contains(maxStayId) && !HasOutNotes)
                 {
                     Sheet.Cells[current, 31].Value = "راسب وينظر في فصله";
                 }
@@ -359,9 +365,9 @@ namespace ExcelCode
                 //       Sheet.AddNote(current, " راسب في مادة واحدة", failCount);
                 //    if (failCount == 2)
                 //       Sheet.AddNote(current, " راسب في مادتين ", failCount);
-                if (failCount > 2 && failCount < 11)
+                if (failCount > 2 && failCount < 11 && !HasOutNotes)
                     Sheet.AddNote(current, " راسب في {0} مواد ", failCount);
-                if (failCount > 10)
+                if (failCount > 10 && !HasOutNotes)
                     Sheet.AddNote(current, "راسب في {0} مادة", failCount);
 
 
@@ -378,12 +384,12 @@ namespace ExcelCode
             //الكود المقترح للمادتين
             If row.StdStat == "منقول بمادتين" ? "منقول بمادتين "+ row.SubjName [that has] row.subjctState == "Fail" +" "+ row.SubjYName +" و" row.SubjName [that has] row.subjctState == "Fail" +" "+ row.SubjYName
             */
-            if (!string.IsNullOrWhiteSpace(StdState) && StdState.Contains("منقول بماد") && rows.Any(i => i.subjectState == "Fail"))
+            if (!string.IsNullOrWhiteSpace(StdState) && StdState.Contains("منقول بماد") && rows.Any(i => i.subjectState == "Fail") && !HasOutNotes && !rows.All(i => i.Grade == "غ"))
             {
 
                 var subjectsWithHelpFromFailArray = rows.Where(i => i.subjectState == "Fail").Select(i => (string)i.SubjName + " " + (((string)i.SubjYName) == this.SubjYName ? "" : ((string)i.SubjYName))).ToArray();
                 var subjectsWithHelpFromFail = string.Join(" و", subjectsWithHelpFromFailArray);
-                if(anyHelp)
+                if(anyHelp )
                     Sheet.AddNote(current, "لينقل بـ" + subjectsWithHelpFromFail);
                 else
                     Sheet.AddNote(current, (string)rows.FirstOrDefault().StdState + " " + subjectsWithHelpFromFail);
@@ -403,7 +409,7 @@ namespace ExcelCode
             #region منح الدرجة الأعلى
             ///في حالة المنح في المجموع الكلي .. الكود المقترح
             // If row.HelpDegOnTotalDeg > 0 ? "منح " + row.HelpDegOnTotalDeg + "درجة أو درجات في المجموع الكلي ليتمتع بالتقدير الأعلى"
-            if (rows.FirstOrDefault().HelpDegOnTotalDeg > 0)
+            if (rows.FirstOrDefault().HelpDegOnTotalDeg > 0 && !HasOutNotes)
             {
                 Sheet.AddNote(current, "منح {0}  في المجموع الكلي ليتمتع بالتقدير الأعلى", strDegrees((int)rows.FirstOrDefault().HelpDegOnTotalDeg));
             }
@@ -416,7 +422,7 @@ namespace ExcelCode
 
             var first = rows.FirstOrDefault();
             int? totalBefore = ((string)first.TotalBefore).Parse<int?>();
-            if (first.IsFinal && totalBefore.HasValue && totalBefore < first.HalfMaxTotal)
+            if (first.IsFinal && totalBefore.HasValue && totalBefore < first.HalfMaxTotal && !HasOutNotes)
             {
                 Sheet.AddNote(current, "منح {0} في المجموع الكلي ليصل للحد الأدنى للنجاح", (int)first.HalfMaxTotal - totalBefore);
             }
@@ -462,7 +468,7 @@ namespace ExcelCode
                 {
                     Sheet.Cells[current + i, colIndex].WithStyle("HelpedSubjDegree").Value = row.OralDeg;
                 }
-                if (oralDeg.Parse<float?>().HasValue && oralDeg.Parse<float?>() < 24 && oralDeg.Parse<float?>() > 18 && row.subjectState == "Help")
+                if (oralDeg.Parse<float?>().HasValue && oralDeg.Parse<float?>() < 24 && oralDeg.Parse<float?>() > 18 && row.subjectState == "Help" && !HasOutNotes)
                 {
                     anyHelp = true;
                     helpCount++;
@@ -517,7 +523,7 @@ namespace ExcelCode
                 {
                     Sheet.Cells[current + i, colIndex].WithStyle("HelpedSubjDegree").Value = writingDeg;
                 }
-                if (writingDeg.Parse<float?>().HasValue && writingDeg.Parse<float?>() < 24 && writingDeg.Parse<float?>() > 18)
+                if (writingDeg.Parse<float?>().HasValue && writingDeg.Parse<float?>() < 24 && writingDeg.Parse<float?>() > 18 && !HasOutNotes)
                 {
                     anyHelp = true;
                     helpCount++;
