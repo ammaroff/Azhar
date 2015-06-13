@@ -293,13 +293,14 @@ namespace ExcelCode
             #endregion
 
             #region الغائب
-            
+            bool absantWithoutCase = false;
             if (rows
                 .Where(i => !i.IsFromLastYear)
-                .All(i => i.Grade == "غ") && !HasOutNotes)
+                .All(i => i.Grade == "غ")  && !HasOutNotes)
             {
                 Sheet.Cells[current, 31].Value = "غائب ";
                 Sheet.AddNote(current, "غائب بدون عذر");
+                absantWithoutCase = true;
 
             }
             #endregion
@@ -352,7 +353,7 @@ namespace ExcelCode
 
             //الكود التالي لا يعمل .. ولابد من الشرطين هذين حتى يتحقق أن الطالب راسب وليس بمنقول
 
-            if (!rows.FirstOrDefault().IsFinal && !string.IsNullOrWhiteSpace(StdState) && StdState.Contains("راسب")/*أضفت هذا الشرط لأن الطالب الراسب والمعرض للفصل ينبغي أن لا يكون منقولا*/)//طالب راسب
+            if (!rows.FirstOrDefault().IsFinal && !absantWithoutCase && !string.IsNullOrWhiteSpace(StdState) && StdState.Contains("راسب")/*أضفت هذا الشرط لأن الطالب الراسب والمعرض للفصل ينبغي أن لا يكون منقولا*/)//طالب راسب
             {
                 // احسب عدد مواد الرسوب
                 int failCount = rows.Count(i => i.subjectState == "Fail");
