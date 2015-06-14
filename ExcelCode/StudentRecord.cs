@@ -294,10 +294,13 @@ namespace ExcelCode
 
             #region الغائب
             bool absantWithoutCase = false;
+            var AbsantInQuran = rows.Where(i => i.SubjName == "القرآن الكريم").SelectMany(i => new[] { (string)i.OralDeg, (string)i.WriringDeg }).All(i => i == "غ");
             if (rows
                 .Where(i => !i.IsFromLastYear)
-                .All(i => i.Grade == "غ")  && !HasOutNotes)
+                .All(i => i.Grade == "غ") && AbsantInQuran && !HasOutNotes)
             {
+               
+                
                 Sheet.Cells[current, 31].Value = "غائب ";
                 Sheet.AddNote(current, "غائب بدون عذر");
                 absantWithoutCase = true;
